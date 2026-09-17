@@ -52,7 +52,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 <div class="wrap">
 <section id="home" class="card center">
   <span class="kicker">HUMAN ERROR PREVENTION</span>
-  <div class="brain">🧠</div>
+  <div class="brain">😊</div>
   <div class="logo">HUMAN ERROR<br>CHALLENGE #2</div>
   <h2>ATTENTION OVERLOAD</h2>
   <p class="subtitle">당신은 어디까지 집중할 수 있습니까?</p>
@@ -73,6 +73,12 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <div id="brainWait" class="brain">🧠</div>
   <div id="readyText" class="ready">READY!</div>
   <h2 id="waitingTitle">참가 완료!</h2>
+  <div class="msg" style="text-align:left">
+    <b>🎮 HOW TO PLAY</b><br><br>
+    화면에 흩어진 숫자를 <b>주어진 작업조건에 맞게</b> 선택하세요.<br>
+    단계가 올라갈수록 작업환경이 달라집니다.<br><br>
+    <b>TIP! 빠르게, 하지만 정확하게 👀</b>
+  </div>
   <p id="waitingMsg">교수자의 게임 시작을 기다려주세요.</p>
   <span class="pill">현재 참가자 <b id="count">0</b>명</span>
   <p class="small">ROOM <b id="roomLabel"></b></p>
@@ -128,6 +134,13 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <p class="center subtitle">다음 진행을 기다려주세요.</p>
 </section>
 
+<section id="finalMessage" class="card center hidden">
+  <div class="brain s3">😊</div>
+  <h1>게임이 어려워진 이유는 무엇이었을까요?</h1>
+  <h2>당신의 능력이 갑자기 떨어진 것이 아닙니다.</h2>
+  <div class="lesson"><b>절차 제공 → 기억 의존 → 주의분산 → 작업조건 변화 → 작업중단 → 다른 업무 → 작업복귀</b><h2>달라진 것은 작업환경이었습니다.</h2></div>
+  <button id="seeResult" class="primary">나의 결과 확인</button>
+</section>
 <section id="final" class="card hidden">
   <div class="center"><div class="brain s3">🤯</div><h1>FINAL REPORT</h1></div>
   <div id="finalRank" class="list"></div>
@@ -156,10 +169,17 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase
 import {getDatabase,ref,set,get,onValue,update,remove,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import {firebaseConfig} from "./firebase-config.js";
 
-const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"son",NUMBER_COUNT:15,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
+const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"son",NUMBER_COUNT:10,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),$=id=>document.getElementById(id);
 let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,timer=null,popupTimer=null,ended=true,startKey=0,duration=30;
 let distractionErrors=0,interruptionErrors=0,conditionErrors=0,lastDistraction=0,lastInterruption=0,lastCondition=0;
+let roundIndex=0,roundPos=0;
+const CONDITIONS=[
+ {label:"1 → 10 순서대로 선택",seq:[1,2,3,4,5,6,7,8,9,10]},
+ {label:"홀수만 작은 수부터 선택",seq:[1,3,5,7,9]},
+ {label:"짝수만 큰 수부터 선택",seq:[10,8,6,4,2]},
+ {label:"3의 배수만 작은 수부터 선택",seq:[3,6,9]}
+];
 let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.random().toString(36).slice(2)));localStorage.he2_pid=pid;
 const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
 const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));$(id)?.classList.remove("hidden")};
@@ -179,7 +199,7 @@ function listenParticipant(){
  onValue(rr("game"),s=>{if(!s.exists())return;const g=s.val()||{};
    if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
    else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
-   else if(g.status==="final")showFinal();
+   else if(g.status==="final")show("finalMessage");
    else if(g.status==="waiting")showReady();
    else if(g.status==="kicked")show("home");
  });
@@ -200,33 +220,63 @@ function prepareStage(s,st,d){
  const labels={1:"STAGE 1 · NORMAL",2:"STAGE 2 · DISTRACTION",3:"STAGE 3 · OVERLOAD"};
  $("stageIntro").textContent=labels[s];$("countdownMsg").textContent=s===1?"기본 작업에 집중하세요!":s===2?"방해에 흔들리지 마세요!":"작업조건 변화를 확인하세요!";
  show("countdownScreen");
- const tick=()=>{const left=Math.ceil((st-Date.now())/1000);$("countdown").textContent=left>0?left:"GO!";if(left<=0){clearInterval(timer);beginStage(s,st,d)}};
+ const visualStart=Date.now();const tick=()=>{const e=Date.now()-visualStart;$("countdown").textContent=e<1000?"3":e<2000?"2":e<3000?"1":"GO!";if(e>=3500){clearInterval(timer);beginStage(s,Date.now(),d)}};
  tick();clearInterval(timer);timer=setInterval(tick,150);
 }
 function beginStage(s,st,d){
  stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
- $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=1;$("instruction").textContent="1부터 순서대로 누르세요.";$("bar").style.width="0%";show("game");drawNumbers();
+ $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
+$("instruction").textContent=s===1?"절차 제공: NEXT 숫자를 따라 작업하세요.":"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다.";
+$("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;setRound();
  if(s>=2)scheduleDistraction();if(s===3)scheduleOverload();
  const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
+}
+function currentCondition(){return stage===1?CONDITIONS[0]:CONDITIONS[roundIndex%CONDITIONS.length]}
+function setRound(){
+  roundPos=0; const c=currentCondition();
+  $("instruction").textContent=(stage===1?"절차 제공 · ":"작업조건 · ")+c.label;
+  if(stage===1)$("nextNo").textContent=c.seq[0]; else $("nextNo").textContent="—";
+  drawNumbers();
 }
 function drawNumbers(){
  const board=$("gameboard");board.querySelectorAll(".num").forEach(x=>x.remove());
  const W=Math.max(280,board.clientWidth),H=Math.max(360,board.clientHeight),spots=[];
- for(let n=1;n<=SETTINGS.NUMBER_COUNT;n++){
-   let x,y,tries=0;do{x=8+Math.random()*(W-70);y=55+Math.random()*(H-120);tries++}while(spots.some(p=>Math.hypot(p.x-x,p.y-y)<58)&&tries<80);spots.push({x,y});
-   const b=document.createElement("button");b.className="num"+(n===next?" target":"");b.textContent=n;b.style.left=x+"px";b.style.top=y+"px";b.dataset.n=n;b.onclick=()=>pick(n);board.appendChild(b);
+ for(let n=1;n<=10;n++){
+   const size=44+Math.floor(Math.random()*24);let x,y,tries=0;
+   do{x=8+Math.random()*(W-size-16);y=55+Math.random()*(H-size-110);tries++}
+   while(spots.some(p=>Math.hypot(p.x-x,p.y-y)<62)&&tries<100);spots.push({x,y});
+   const b=document.createElement("button");b.className="num";b.textContent=n;
+   b.style.width=size+"px";b.style.height=size+"px";b.style.fontSize=Math.round(size*.38)+"px";
+   b.style.left=x+"px";b.style.top=y+"px";b.dataset.n=n;b.onclick=()=>pick(n);board.appendChild(b);
  }
+ markTarget();
 }
 function pick(n){
  if(ended)return;
- if(n===next){correct++;score+=10;next++;if(next>SETTINGS.NUMBER_COUNT){next=1;drawNumbers()}else markTarget()}
- else{wrong++;score-=stage===1?0:stage===2?10:30;const now=Date.now();if(now-lastDistraction<3000)distractionErrors++;if(now-lastInterruption<4000)interruptionErrors++;if(now-lastCondition<4000)conditionErrors++}
- $("score").textContent=score;$("nextNo").textContent=next;$("bar").style.width=((next-1)/SETTINGS.NUMBER_COUNT*100)+"%";
+ const c=currentCondition(),expected=c.seq[roundPos];
+ if(n===expected){
+   correct++;score+=10;roundPos++;
+   if(roundPos>=c.seq.length){roundIndex++;setRound()}
+   else{if(stage===1)$("nextNo").textContent=c.seq[roundPos];markTarget()}
+ }else{
+   wrong++;score-=stage===1?0:stage===2?10:30;
+   const now=Date.now();if(now-lastDistraction<3000)distractionErrors++;
+   if(now-lastInterruption<4500)interruptionErrors++;conditionErrors++;
+   flashFeedback(c.seq.slice(0,roundPos).includes(n)?"이미 완료한 작업입니다.":"작업순서를 다시 확인하세요.");
+ }
+ $("score").textContent=score;
+ $("bar").style.width=(roundPos/currentCondition().seq.length*100)+"%";
 }
-function markTarget(){$("gameboard").querySelectorAll(".num").forEach(b=>b.classList.toggle("target",+b.dataset.n===next))}
+function markTarget(){
+ const exp=currentCondition().seq[roundPos];
+ $("gameboard").querySelectorAll(".num").forEach(b=>b.classList.toggle("target",stage===1&&+b.dataset.n===exp));
+}
+function flashFeedback(text){
+ const board=$("gameboard"),d=document.createElement("div");d.className="toast";d.textContent="⚠️ "+text;board.appendChild(d);setTimeout(()=>d.remove(),900);
+}
 function scheduleDistraction(){
  clearTimeout(popupTimer);if(ended)return;
- popupTimer=setTimeout(()=>{if(ended)return;lastDistraction=Date.now();flashNotice(["🔔 ALARM · 확인 후 작업을 계속하세요","💬 MESSAGE · 집중을 유지하세요","⚠️ NOTICE · 현재 위치를 놓치지 마세요"][Math.floor(Math.random()*3)]);scheduleDistraction()},SETTINGS.POPUP_MIN_MS+Math.random()*(SETTINGS.POPUP_MAX_MS-SETTINGS.POPUP_MIN_MS));
+ popupTimer=setTimeout(()=>{if(ended)return;lastDistraction=Date.now();flashNotice(["👷 동료: 잠깐 이것 좀 확인해 주세요.","📢 페이지폰: 4호기 주제어실에서 알려드립니다.","📞 업무전화: 현장 진행상황 확인 부탁드립니다.","🚶 작업자: 여기 잠깐 지나가겠습니다."][Math.floor(Math.random()*3)]);scheduleDistraction()},SETTINGS.POPUP_MIN_MS+Math.random()*(SETTINGS.POPUP_MAX_MS-SETTINGS.POPUP_MIN_MS));
 }
 function scheduleOverload(){
  let t=setInterval(()=>{if(ended){clearInterval(t);return}const r=Math.random();if(r<.5){lastInterruption=Date.now();flashNotice("🛑 STOP! 2초 후 작업을 재개하세요",2000)}else{lastCondition=Date.now();flashNotice("🔄 CONDITION CHANGE · 현재 NEXT를 다시 확인하세요",1600)}addSticker()},4200);
@@ -243,12 +293,13 @@ async function getStage(s){const x=await get(rr(`results/stage${s}`));return Obj
 function rankRows(a){return a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}<div class="small">정답 ${x.correct||0} · 오답 ${x.wrong||0} · 오류율 ${(x.errorRate||0).toFixed(1)}%</div></span><strong>${x.score||0}점</strong></div>`).join("")||'<div class="msg">아직 결과가 없습니다.</div>'}
 async function showResults(s){
  stage=s;const a=await getStage(s);a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);$("resultTitle").textContent=`STAGE ${s} RANKING`;$("resultBrain").className="brain "+(s===2?"s2":s===3?"s3":"");$("resultBrain").textContent=s===1?"😊":s===2?"😵‍💫":"🤯";$("resultRank").innerHTML=rankRows(a);
- const me=a.find(x=>x.pid===pid);$("myAnalysis").innerHTML=me?`<div class="lesson"><b>MY ERROR REPORT</b><p>주의분산 후 오류 ${me.distractionErrors||0} · 작업중단 후 오류 ${me.interruptionErrors||0} · 조건변경 후 오류 ${me.conditionErrors||0}</p></div>`:"";show("result");
+ $("myAnalysis").innerHTML="";show("result");
 }
 async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
 async function errorStats(){const out=[];for(let s=1;s<=3;s++){const a=await getStage(s),c=a.reduce((z,x)=>z+(+x.correct||0),0),w=a.reduce((z,x)=>z+(+x.wrong||0),0);out.push({s,rate:c+w?w/(c+w)*100:0})}return out}
 async function showFinal(){const a=await buildFinal(),stats=await errorStats();$("finalRank").innerHTML=rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));$("errorStats").innerHTML=stats.map((x,i)=>`<div class="stat"><span>${["NORMAL","DISTRACTION","OVERLOAD"][i]}</span><b>${x.rate.toFixed(1)}%</b><small>오류율</small></div>`).join("");show("final")}
 async function renderAdmin(){if(!roomId)return;const g=await get(rr("game"));if(!g.exists())return;const s=+g.val().currentStage||1,a=await getStage(s);a.sort((x,y)=>y.score-x.score);$("adminRank").innerHTML=rankRows(a)}
+$("seeResult").onclick=showFinal;
 if(localStorage.he2_name)$("name").value=localStorage.he2_name;if(localStorage.he2_room)$("room").value=localStorage.he2_room;
 </script>
 </body>
