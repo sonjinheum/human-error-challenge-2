@@ -62,18 +62,46 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 /* Stage 3 overloaded cat */
 .brain.s3{background-position:-770px -70px!important;transform:none!important}
 
+
+/* V3 approved KHNP title artwork */
+.home-hero{
+  position:relative;
+  width:min(100%,1280px);
+  margin:0 auto;
+  border:3px solid var(--ink);
+  border-radius:28px;
+  overflow:hidden;
+  background:#dff4ff;
+  box-shadow:var(--shadow);
+  aspect-ratio:16/10;
+}
+.home-art{display:block;width:100%;height:100%;object-fit:cover}
+.home-actions{
+  position:absolute;left:27%;top:64%;width:45%;display:flex;gap:3%;justify-content:center;
+}
+.home-actions button{
+  margin:0;height:auto;min-height:0;padding:1.1vw 2vw;
+  font-size:clamp(0px,0px,0px); /* visual labels are in the artwork */
+  opacity:.01;background:white;border:0;box-shadow:none;
+}
+.hero-play{width:52%}.hero-admin{width:44%}
+.home-actions button:focus-visible{opacity:.18;outline:5px solid white;outline-offset:2px}
+@media(max-width:650px){
+  .home-hero{border-radius:18px}
+  .home-actions{left:26%;top:63%;width:47%}
+  .home-actions button{padding:3vw 1vw}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<section id="home" class="card center">
-  <span class="kicker">HUMAN ERROR PREVENTION</span>
-  <div class="brain">😊</div>
-  <div class="logo">HUMAN ERROR<br>CHALLENGE #2</div>
-  <h2>ATTENTION OVERLOAD</h2>
-  <p class="subtitle">당신은 어디까지 집중할 수 있습니까?</p>
-  <button class="primary" data-go="join">게임 참가</button>
-  <button class="warn" data-go="adminLogin">관리자</button>
+<section id="home" class="home-hero">
+  <img class="home-art" src="./khnp-home-v3.png" alt="HUMAN ERROR CHALLENGE 2 시작 화면">
+  <div class="home-actions" aria-label="게임 메뉴">
+    <button class="hero-play" data-go="join">게임 시작</button>
+    <button class="hero-admin" data-go="adminLogin">관리자</button>
+  </div>
 </section>
 
 <section id="join" class="card hidden">
