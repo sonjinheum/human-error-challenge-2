@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Human Error Challenge 2 - Attention Overload</title>
+<style>
+:root{
+  --cream:#fff6df;--ink:#25213a;--pink:#ff72a8;--yellow:#ffd84d;--mint:#65dfb2;
+  --blue:#72b7ff;--orange:#ff985e;--purple:#a98bff;--white:#fffdf7;--red:#ff5f6d;
+  --shadow:5px 6px 0 var(--ink);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background-image:radial-gradient(var(--pink) 1.5px,transparent 1.5px);background-size:22px 22px}
+.wrap{max-width:920px;margin:auto;padding:18px;position:relative}
+.card{background:var(--white);border:3px solid var(--ink);border-radius:28px;padding:22px;box-shadow:var(--shadow)}
+.center{text-align:center}.hidden{display:none!important}
+.logo{font-weight:1000;letter-spacing:-1px;font-size:clamp(32px,8vw,66px);line-height:.95;margin:12px 0}
+.kicker{display:inline-block;background:var(--yellow);border:2px solid var(--ink);border-radius:999px;padding:7px 12px;font-weight:900;transform:rotate(-2deg)}
+.subtitle{font-weight:900;color:#615b73}
+.brain{font-size:76px;display:inline-grid;place-items:center;width:118px;height:118px;border:3px solid var(--ink);border-radius:38% 62% 46% 54%;background:var(--pink);box-shadow:4px 5px 0 var(--ink);margin:10px}
+.brain.s2{background:var(--yellow);animation:wobble .65s infinite alternate}.brain.s3{background:var(--orange);animation:wobble .25s infinite alternate}
+@keyframes wobble{to{transform:rotate(5deg) scale(1.03)}}
+button,input,select{font:inherit}
+button{min-height:48px;border:3px solid var(--ink);border-radius:16px;padding:11px 16px;font-weight:1000;background:var(--blue);color:var(--ink);box-shadow:3px 4px 0 var(--ink);cursor:pointer;margin:5px}
+button:active{transform:translate(2px,2px);box-shadow:1px 2px 0 var(--ink)}
+.primary{background:var(--pink)}.good{background:var(--mint)}.warn{background:var(--yellow)}.danger{background:var(--red);color:white}
+input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radius:15px;padding:11px;background:white;color:var(--ink);margin:7px 0;font-size:16px}
+.small{font-size:13px;color:#6d667b}.msg{padding:12px;border:2px solid var(--ink);border-radius:15px;background:#fff;margin:10px 0}
+.hud{display:flex;justify-content:space-between;gap:7px;flex-wrap:wrap;align-items:center}
+.pill{border:2px solid var(--ink);border-radius:999px;padding:7px 11px;background:white;font-weight:900}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px}
+.list{display:grid;gap:8px;margin-top:12px}.row{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center;padding:11px;border:2px solid var(--ink);border-radius:15px;background:white}
+.ready{font-size:clamp(50px,15vw,100px);font-weight:1000;color:var(--pink);text-shadow:3px 3px 0 var(--ink);margin:22px 0}
+.countdown{font-size:clamp(82px,28vw,170px);font-weight:1000;color:var(--pink);line-height:1;text-shadow:5px 6px 0 var(--ink)}
+.gameboard{position:relative;min-height:440px;margin-top:14px;border:3px solid var(--ink);border-radius:24px;background:#fffdf7;overflow:hidden}
+.num{position:absolute;width:54px;height:54px;margin:0;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--yellow);font-size:20px;z-index:2}
+.num.target{background:var(--mint)}
+.toast{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:8;width:min(88%,440px);background:var(--pink);border:3px solid var(--ink);border-radius:18px;padding:14px;font-weight:1000;box-shadow:4px 5px 0 var(--ink);text-align:center}
+.sticker{position:absolute;font-size:28px;z-index:1;animation:float 1.1s infinite alternate}
+@keyframes float{to{transform:translateY(8px) rotate(7deg)}}
+.progress{height:22px;border:2px solid var(--ink);border-radius:999px;background:white;overflow:hidden}.bar{height:100%;background:var(--pink);width:0}
+.analysis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{border:2px solid var(--ink);border-radius:16px;padding:12px;background:white;text-align:center}.stat b{font-size:26px;display:block}
+.lesson{background:var(--yellow);border:3px solid var(--ink);border-radius:20px;padding:18px;margin-top:18px}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}.tool{border:2px solid var(--ink);border-radius:15px;padding:12px;background:white}
+@media(max-width:520px){.wrap{padding:10px}.card{padding:15px;border-radius:22px}.gameboard{min-height:400px}.num{width:49px;height:49px}.analysis{grid-template-columns:1fr}.row{grid-template-columns:34px 1fr auto}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="home" class="card center">
+  <span class="kicker">HUMAN ERROR PREVENTION</span>
+  <div class="brain">🧠</div>
+  <div class="logo">HUMAN ERROR<br>CHALLENGE #2</div>
+  <h2>ATTENTION OVERLOAD</h2>
+  <p class="subtitle">당신은 어디까지 집중할 수 있습니까?</p>
+  <button class="primary" data-go="join">게임 참가</button>
+  <button class="warn" data-go="adminLogin">관리자</button>
+</section>
+
+<section id="join" class="card hidden">
+  <h2>🎟️ 게임 참가</h2>
+  <input id="name" maxlength="16" placeholder="이름 또는 닉네임" autocomplete="off">
+  <input id="room" maxlength="8" placeholder="ROOM CODE" value="2050" inputmode="numeric">
+  <button id="joinBtn" class="primary">참가하기</button>
+  <button data-go="home">뒤로</button>
+  <div id="joinMsg" class="small"></div>
+</section>
+
+<section id="waiting" class="card center hidden">
+  <div id="brainWait" class="brain">🧠</div>
+  <div id="readyText" class="ready">READY!</div>
+  <h2 id="waitingTitle">참가 완료!</h2>
+  <p id="waitingMsg">교수자의 게임 시작을 기다려주세요.</p>
+  <span class="pill">현재 참가자 <b id="count">0</b>명</span>
+  <p class="small">ROOM <b id="roomLabel"></b></p>
+</section>
+
+<section id="countdownScreen" class="card center hidden">
+  <div class="brain">🧠</div>
+  <p class="kicker" id="stageIntro">STAGE 1 · NORMAL</p>
+  <div id="countdown" class="countdown">3</div>
+  <h2 id="countdownMsg">집중하세요!</h2>
+</section>
+
+<section id="adminLogin" class="card hidden">
+  <h2>🕹️ ADMIN</h2>
+  <input id="adminRoom" maxlength="8" value="2050" placeholder="ROOM CODE">
+  <input id="pw" type="password" placeholder="관리자 비밀번호">
+  <label class="small">게임시간</label>
+  <select id="duration"><option value="30">30초</option><option value="45">45초</option><option value="60">60초</option></select>
+  <button id="adminBtn" class="primary">접속</button><button data-go="home">뒤로</button>
+</section>
+
+<section id="admin" class="card hidden">
+  <div class="hud"><h2>🧠 ADMIN DASHBOARD</h2><span class="pill">참가자 <b id="adminCount">0</b>명</span></div>
+  <div class="admin-grid">
+    <button class="good" data-stage="1">1단계 START</button><button data-result="1">1단계 결과</button>
+    <button class="warn" data-stage="2">2단계 START</button><button data-result="2">2단계 결과</button>
+    <button class="primary" data-stage="3">3단계 START</button><button data-result="3">3단계 결과</button>
+    <button id="finalBtn">최종 결과</button><button id="kickBtn" class="danger">전체 KICK</button>
+    <button id="resetBtn" class="danger">게임 초기화</button>
+  </div>
+  <div id="adminStatus" class="msg">대기 중</div>
+  <h3>참가자</h3><div id="people" class="list"></div>
+  <h3>RANKING / ANALYSIS</h3><div id="adminRank" class="list"></div>
+</section>
+
+<section id="game" class="card center hidden">
+  <div class="hud">
+    <span class="pill">STAGE <b id="stageNo">1</b></span>
+    <span class="pill">NEXT <b id="nextNo">1</b></span>
+    <span class="pill">⏱ <b id="time">30</b>s</span>
+    <span class="pill">SCORE <b id="score">0</b></span>
+  </div>
+  <div class="progress"><div id="bar" class="bar"></div></div>
+  <div id="gameboard" class="gameboard"></div>
+  <p id="instruction" class="small">1부터 순서대로 누르세요.</p>
+</section>
+
+<section id="result" class="card hidden">
+  <div id="resultBrain" class="brain">🧠</div>
+  <h2 id="resultTitle">STAGE RESULT</h2>
+  <div id="resultRank" class="list"></div>
+  <div id="myAnalysis"></div>
+  <p class="center subtitle">다음 진행을 기다려주세요.</p>
+</section>
+
+<section id="final" class="card hidden">
+  <div class="center"><div class="brain s3">🤯</div><h1>FINAL REPORT</h1></div>
+  <div id="finalRank" class="list"></div>
+  <h2>📊 전체 참여자 오류율</h2><div id="errorStats" class="analysis"></div>
+  <div class="lesson center">
+    <h2>사람이 갑자기 부주의해진 걸까요?</h2>
+    <h3>아니면 작업환경이 실수하기 쉬워진 걸까요?</h3>
+    <p>주의분산 · 작업중단 · 시간압박 · 작업기억 한계 · 정보 과부하는 오류 가능성을 높입니다.</p>
+    <h2>인간은 누구나 실수할 수 있습니다.</h2>
+    <p><b>중요한 것은 더 집중하라고 요구하는 것만이 아니라, 실수가 발생하기 어려운 작업환경과 확인 장치를 만드는 것입니다.</b></p>
+  </div>
+  <h2>HOW CAN WE PREVENT IT?</h2>
+  <div class="tools">
+    <div class="tool"><b>SELF CHECK</b><br><span class="small">행동 전 대상과 목적을 다시 확인</span></div>
+    <div class="tool"><b>PLACE KEEPING</b><br><span class="small">중단 후 작업 위치를 명확히 확인</span></div>
+    <div class="tool"><b>3-WAY COMMUNICATION</b><br><span class="small">지시·복창·확인으로 전달 오류 예방</span></div>
+    <div class="tool"><b>STOP WHEN UNSURE</b><br><span class="small">불확실하면 멈추고 확인</span></div>
+    <div class="tool"><b>PEER CHECK</b><br><span class="small">중요 작업은 동료와 독립적으로 확인</span></div>
+    <div class="tool"><b>PROCEDURE USE</b><br><span class="small">기억보다 절차와 체크포인트 활용</span></div>
+  </div>
+</section>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {getDatabase,ref,set,get,onValue,update,remove,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import {firebaseConfig} from "./firebase-config.js";
+
+const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"KHNP",NUMBER_COUNT:15,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
+const app=initializeApp(firebaseConfig),db=getDatabase(app),$=id=>document.getElementById(id);
+let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,timer=null,popupTimer=null,ended=true,startKey=0,duration=30;
+let distractionErrors=0,interruptionErrors=0,conditionErrors=0,lastDistraction=0,lastInterruption=0,lastCondition=0;
+let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.random().toString(36).slice(2)));localStorage.he2_pid=pid;
+const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
+const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));$(id)?.classList.remove("hidden")};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.go)show(b.dataset.go);if(b.dataset.stage)startAdminStage(+b.dataset.stage);if(b.dataset.result)setStatus(`stage${b.dataset.result}Result`)});
+$("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onclick=()=>setStatus("final");$("resetBtn").onclick=resetGame;$("kickBtn").onclick=kickAll;
+
+async function joinGame(){
+ name=$("name").value.trim();roomId=$("room").value.trim().toUpperCase();
+ if(!name||!roomId){$("joinMsg").textContent="이름과 ROOM CODE를 입력하세요.";return}
+ try{localStorage.he2_name=name;localStorage.he2_room=roomId;await set(rr(`participants/${pid}`),{name,joinedAt:Date.now()});$("roomLabel").textContent=roomId;listenParticipant();showReady()}
+ catch(e){$("joinMsg").textContent="접속 실패: "+e.message}
+}
+function showReady(){clearInterval(timer);clearTimeout(popupTimer);$("readyText").textContent="READY!";$("waitingTitle").textContent="참가 완료!";$("waitingMsg").textContent="교수자의 게임 시작을 기다려주세요.";$("brainWait").className="brain";$("brainWait").textContent="🧠";show("waiting")}
+function listenParticipant(){
+ onValue(rr("participants"),s=>{$("count").textContent=Object.keys(s.val()||{}).length;if(!s.child(pid).exists()){localStorage.removeItem("he2_room");show("home")}});
+ onValue(rr("game"),s=>{if(!s.exists())return;const g=s.val()||{};
+   if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
+   else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
+   else if(g.status==="final")showFinal();
+   else if(g.status==="waiting")showReady();
+   else if(g.status==="kicked")show("home");
+ });
+}
+function adminLogin(){if($("pw").value!==SETTINGS.ADMIN_PASSWORD){alert("비밀번호가 올바르지 않습니다.");return}roomId=$("adminRoom").value.trim().toUpperCase();if(!roomId)return alert("ROOM CODE를 입력하세요.");duration=+$("duration").value||30;show("admin");listenAdmin()}
+function listenAdmin(){
+ onValue(rr("participants"),s=>{const a=Object.values(s.val()||{});$("adminCount").textContent=a.length;$("people").innerHTML=a.length?a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}</span><strong>READY</strong></div>`).join(""):'<div class="msg">아직 참가자가 없습니다.</div>'});
+ onValue(rr("game"),s=>{$("adminStatus").textContent=s.exists()?`현재 상태: ${s.val().status}`:"대기 중";renderAdmin()});
+ onValue(rr("results"),renderAdmin);
+}
+async function startAdminStage(s){const st=Date.now()+4000;await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration});}
+async function setStatus(status){let s=+(status.match(/[123]/)||[stage||1])[0];await update(rr("game"),{status,currentStage:status==="final"?3:s});}
+async function resetGame(){if(!confirm("참가자와 모든 결과를 삭제하고 초기화할까요?"))return;await remove(rr());await set(rr("game"),{status:"waiting",currentStage:0,startTime:0});}
+async function kickAll(){if(!confirm("모든 참가자를 퇴장시킬까요?"))return;await remove(rr("participants"));await update(rr("game"),{status:"kicked"});}
+
+function prepareStage(s,st,d){
+ if(startKey===st&&!ended)return;startKey=st;stage=s;duration=d;ended=false;
+ const labels={1:"STAGE 1 · NORMAL",2:"STAGE 2 · DISTRACTION",3:"STAGE 3 · OVERLOAD"};
+ $("stageIntro").textContent=labels[s];$("countdownMsg").textContent=s===1?"기본 작업에 집중하세요!":s===2?"방해에 흔들리지 마세요!":"작업조건 변화를 확인하세요!";
+ show("countdownScreen");
+ const tick=()=>{const left=Math.ceil((st-Date.now())/1000);$("countdown").textContent=left>0?left:"GO!";if(left<=0){clearInterval(timer);beginStage(s,st,d)}};
+ tick();clearInterval(timer);timer=setInterval(tick,150);
+}
+function beginStage(s,st,d){
+ stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
+ $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=1;$("instruction").textContent="1부터 순서대로 누르세요.";$("bar").style.width="0%";show("game");drawNumbers();
+ if(s>=2)scheduleDistraction();if(s===3)scheduleOverload();
+ const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
+}
+function drawNumbers(){
+ const board=$("gameboard");board.querySelectorAll(".num").forEach(x=>x.remove());
+ const W=Math.max(280,board.clientWidth),H=Math.max(360,board.clientHeight),spots=[];
+ for(let n=1;n<=SETTINGS.NUMBER_COUNT;n++){
+   let x,y,tries=0;do{x=8+Math.random()*(W-70);y=55+Math.random()*(H-120);tries++}while(spots.some(p=>Math.hypot(p.x-x,p.y-y)<58)&&tries<80);spots.push({x,y});
+   const b=document.createElement("button");b.className="num"+(n===next?" target":"");b.textContent=n;b.style.left=x+"px";b.style.top=y+"px";b.dataset.n=n;b.onclick=()=>pick(n);board.appendChild(b);
+ }
+}
+function pick(n){
+ if(ended)return;
+ if(n===next){correct++;score+=10;next++;if(next>SETTINGS.NUMBER_COUNT){next=1;drawNumbers()}else markTarget()}
+ else{wrong++;score-=stage===1?0:stage===2?10:30;const now=Date.now();if(now-lastDistraction<3000)distractionErrors++;if(now-lastInterruption<4000)interruptionErrors++;if(now-lastCondition<4000)conditionErrors++}
+ $("score").textContent=score;$("nextNo").textContent=next;$("bar").style.width=((next-1)/SETTINGS.NUMBER_COUNT*100)+"%";
+}
+function markTarget(){$("gameboard").querySelectorAll(".num").forEach(b=>b.classList.toggle("target",+b.dataset.n===next))}
+function scheduleDistraction(){
+ clearTimeout(popupTimer);if(ended)return;
+ popupTimer=setTimeout(()=>{if(ended)return;lastDistraction=Date.now();flashNotice(["🔔 ALARM · 확인 후 작업을 계속하세요","💬 MESSAGE · 집중을 유지하세요","⚠️ NOTICE · 현재 위치를 놓치지 마세요"][Math.floor(Math.random()*3)]);scheduleDistraction()},SETTINGS.POPUP_MIN_MS+Math.random()*(SETTINGS.POPUP_MAX_MS-SETTINGS.POPUP_MIN_MS));
+}
+function scheduleOverload(){
+ let t=setInterval(()=>{if(ended){clearInterval(t);return}const r=Math.random();if(r<.5){lastInterruption=Date.now();flashNotice("🛑 STOP! 2초 후 작업을 재개하세요",2000)}else{lastCondition=Date.now();flashNotice("🔄 CONDITION CHANGE · 현재 NEXT를 다시 확인하세요",1600)}addSticker()},4200);
+}
+function flashNotice(text,ms=1300){const board=$("gameboard"),d=document.createElement("div");d.className="toast";d.textContent=text;board.appendChild(d);setTimeout(()=>d.remove(),ms)}
+function addSticker(){const board=$("gameboard"),d=document.createElement("span");d.className="sticker";d.textContent=["⭐","⚡","❗","💥","🔔"][Math.floor(Math.random()*5)];d.style.left=Math.random()*85+"%";d.style.top=15+Math.random()*70+"%";board.appendChild(d);setTimeout(()=>d.remove(),2400)}
+async function finishStage(){
+ if(ended)return;ended=true;clearInterval(timer);clearTimeout(popupTimer);
+ const attempts=correct+wrong,errorRate=attempts?wrong/attempts*100:0,key=`he2_${roomId}_${stage}_${startKey}`;
+ if(!localStorage.getItem(key)){await set(rr(`results/stage${stage}/${pid}`),{pid,name,score,correct,wrong,attempts,errorRate,distractionErrors,interruptionErrors,conditionErrors,submittedAt:serverTimestamp(),startTime:startKey});localStorage.setItem(key,"1")}
+ showResults(stage);
+}
+async function getStage(s){const x=await get(rr(`results/stage${s}`));return Object.entries(x.val()||{}).map(([id,v])=>({...v,pid:v.pid||id}))}
+function rankRows(a){return a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}<div class="small">정답 ${x.correct||0} · 오답 ${x.wrong||0} · 오류율 ${(x.errorRate||0).toFixed(1)}%</div></span><strong>${x.score||0}점</strong></div>`).join("")||'<div class="msg">아직 결과가 없습니다.</div>'}
+async function showResults(s){
+ stage=s;const a=await getStage(s);a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);$("resultTitle").textContent=`STAGE ${s} RANKING`;$("resultBrain").className="brain "+(s===2?"s2":s===3?"s3":"");$("resultBrain").textContent=s===1?"😊":s===2?"😵‍💫":"🤯";$("resultRank").innerHTML=rankRows(a);
+ const me=a.find(x=>x.pid===pid);$("myAnalysis").innerHTML=me?`<div class="lesson"><b>MY ERROR REPORT</b><p>주의분산 후 오류 ${me.distractionErrors||0} · 작업중단 후 오류 ${me.interruptionErrors||0} · 조건변경 후 오류 ${me.conditionErrors||0}</p></div>`:"";show("result");
+}
+async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
+async function errorStats(){const out=[];for(let s=1;s<=3;s++){const a=await getStage(s),c=a.reduce((z,x)=>z+(+x.correct||0),0),w=a.reduce((z,x)=>z+(+x.wrong||0),0);out.push({s,rate:c+w?w/(c+w)*100:0})}return out}
+async function showFinal(){const a=await buildFinal(),stats=await errorStats();$("finalRank").innerHTML=rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));$("errorStats").innerHTML=stats.map((x,i)=>`<div class="stat"><span>${["NORMAL","DISTRACTION","OVERLOAD"][i]}</span><b>${x.rate.toFixed(1)}%</b><small>오류율</small></div>`).join("");show("final")}
+async function renderAdmin(){if(!roomId)return;const g=await get(rr("game"));if(!g.exists())return;const s=+g.val().currentStage||1,a=await getStage(s);a.sort((x,y)=>y.score-x.score);$("adminRank").innerHTML=rankRows(a)}
+if(localStorage.he2_name)$("name").value=localStorage.he2_name;if(localStorage.he2_room)$("room").value=localStorage.he2_room;
+</script>
+</body>
+</html>
