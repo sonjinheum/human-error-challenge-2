@@ -92,12 +92,38 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   .home-actions button{padding:3vw 1vw}
 }
 
+
+/* V4 responsive home */
+.home-picture{display:block;width:100%;height:100%}
+@media(max-width:650px){
+  .wrap{padding:8px}
+  .home-hero{
+    width:100%;
+    aspect-ratio:425/908;
+    border-radius:20px;
+    max-width:430px;
+  }
+  .home-picture,.home-art{width:100%;height:100%;object-fit:cover}
+  .home-actions{
+    left:9%;top:57.5%;width:82%;display:flex;flex-direction:column;gap:1.2%;
+  }
+  .home-actions button{
+    width:100%!important;height:52px;padding:0;margin:2px 0;
+  }
+  .gameboard{min-height:430px}
+  .num{touch-action:manipulation}
+  .toast{width:92%;font-size:14px}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
 <section id="home" class="home-hero">
-  <img class="home-art" src="./khnp-home-v3.png" alt="HUMAN ERROR CHALLENGE 2 시작 화면">
+  <picture class="home-picture">
+    <source media="(max-width:650px)" srcset="./khnp-home-mobile-v4.png">
+    <img class="home-art" src="./khnp-home-v3.png" alt="HUMAN ERROR CHALLENGE 2 시작 화면">
+  </picture>
   <div class="home-actions" aria-label="게임 메뉴">
     <button class="hero-play" data-go="join">게임 시작</button>
     <button class="hero-admin" data-go="adminLogin">관리자</button>
