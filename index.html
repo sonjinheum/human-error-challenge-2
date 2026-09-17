@@ -156,7 +156,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase
 import {getDatabase,ref,set,get,onValue,update,remove,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import {firebaseConfig} from "./firebase-config.js";
 
-const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"KHNP",NUMBER_COUNT:15,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
+const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"son",NUMBER_COUNT:15,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),$=id=>document.getElementById(id);
 let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,timer=null,popupTimer=null,ended=true,startKey=0,duration=30;
 let distractionErrors=0,interruptionErrors=0,conditionErrors=0,lastDistraction=0,lastInterruption=0,lastCondition=0;
