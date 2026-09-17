@@ -115,6 +115,36 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   .toast{width:92%;font-size:14px}
 }
 
+
+/* V5 stage briefing + work method */
+.brief-mascot{
+  width:110px;height:110px;margin:4px auto 12px;display:grid;place-items:center;
+  border:3px solid var(--ink);border-radius:50%;background:linear-gradient(#dff4ff,#efffdc);
+  box-shadow:4px 5px 0 var(--ink);font-size:64px;
+}
+.stage-brief-body{
+  max-width:650px;margin:16px auto;padding:18px;border:3px solid var(--ink);
+  border-radius:20px;background:#fffdf8;font-size:clamp(16px,3.8vw,22px);line-height:1.55;
+}
+.stage-brief-body .method{
+  display:block;margin:14px 0 4px;padding:12px;border:3px solid var(--ink);
+  border-radius:16px;background:var(--yellow);font-weight:1000;font-size:clamp(20px,5vw,30px);
+}
+.work-method{
+  margin:12px 0 8px;border:3px solid var(--ink);border-radius:18px;background:var(--yellow);
+  padding:10px 14px;display:flex;align-items:center;justify-content:center;gap:12px;
+  box-shadow:3px 4px 0 var(--ink);
+}
+.work-method span{font-size:14px;font-weight:1000;background:white;border:2px solid var(--ink);border-radius:999px;padding:5px 9px}
+.work-method strong{font-size:clamp(21px,5vw,34px);font-weight:1000;line-height:1.15}
+.work-method.changed{animation:methodPulse .55s 2}
+@keyframes methodPulse{50%{transform:scale(1.025);background:var(--pink)}}
+@media(max-width:650px){
+  .work-method{position:sticky;top:4px;z-index:30;flex-direction:column;gap:5px;padding:8px}
+  .work-method strong{font-size:22px}
+  .brief-mascot{width:88px;height:88px;font-size:50px}
+}
+
 </style>
 </head>
 <body>
@@ -154,6 +184,13 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <p class="small">ROOM <b id="roomLabel"></b></p>
 </section>
 
+<section id="stageBrief" class="card center hidden">
+  <div id="briefMascot" class="brief-mascot">🐱</div>
+  <span id="briefKicker" class="kicker">STAGE</span>
+  <h1 id="briefTitle"></h1>
+  <div id="briefBody" class="stage-brief-body"></div>
+  <button id="briefReady" class="primary">준비 완료</button>
+</section>
 <section id="countdownScreen" class="card center hidden">
   <div class="brain">🧠</div>
   <p class="kicker" id="stageIntro">STAGE 1 · NORMAL</p>
@@ -245,10 +282,10 @@ let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,timer=null,popupT
 let distractionErrors=0,interruptionErrors=0,conditionErrors=0,lastDistraction=0,lastInterruption=0,lastCondition=0;
 let roundIndex=0,roundPos=0;
 const CONDITIONS=[
- {label:"1 → 10 순서대로 선택",seq:[1,2,3,4,5,6,7,8,9,10]},
- {label:"홀수만 작은 수부터 선택",seq:[1,3,5,7,9]},
- {label:"짝수만 큰 수부터 선택",seq:[10,8,6,4,2]},
- {label:"3의 배수만 작은 수부터 선택",seq:[3,6,9]}
+ {label:"1 → 10 순서로 클릭",seq:[1,2,3,4,5,6,7,8,9,10]},
+ {label:"홀수만 1 → 9 순서로 클릭",seq:[1,3,5,7,9]},
+ {label:"짝수만 10 → 2 순서로 클릭",seq:[10,8,6,4,2]},
+ {label:"3의 배수만 3 → 9 순서로 클릭",seq:[3,6,9]}
 ];
 let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.random().toString(36).slice(2)));localStorage.he2_pid=pid;
 const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
@@ -304,7 +341,7 @@ $("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;setRound();
 function currentCondition(){return stage===1?CONDITIONS[0]:CONDITIONS[roundIndex%CONDITIONS.length]}
 function setRound(){
   roundPos=0; const c=currentCondition();
-  $("instruction").textContent=(stage===1?"절차 제공 · ":"작업조건 · ")+c.label;
+  $("instruction").textContent=(stage===1?"절차 제공 · ":"작업조건 · ")+c.label; $("condition").textContent=c.label;const wm=$("workMethod");wm.classList.remove("changed");void wm.offsetWidth;wm.classList.add("changed");
   if(stage===1)$("nextNo").textContent=c.seq[0]; else $("nextNo").textContent="—";
   drawNumbers();
 }
