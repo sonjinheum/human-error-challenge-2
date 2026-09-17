@@ -46,6 +46,22 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}.tool{border:2px solid var(--ink);border-radius:15px;padding:12px;background:white}
 @media(max-width:520px){.wrap{padding:10px}.card{padding:15px;border-radius:22px}.gameboard{min-height:400px}.num{width:49px;height:49px}.analysis{grid-template-columns:1fr}.row{grid-template-columns:34px 1fr auto}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* V2.1 KHNP CAT MASCOT SPRITES */
+.brain{
+  width:170px!important;height:190px!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;background-image:url("./khnp-cat-mascots.png")!important;
+  background-repeat:no-repeat!important;background-size:960px 640px!important;
+  background-color:transparent!important;font-size:0!important;animation:none!important;
+  margin:8px auto!important;
+}
+/* Main/ready cat */
+.brain{background-position:-12px -70px!important}
+/* Stage 2 distracted cat */
+.brain.s2{background-position:-580px -70px!important;transform:none!important}
+/* Stage 3 overloaded cat */
+.brain.s3{background-position:-770px -70px!important;transform:none!important}
+
 </style>
 </head>
 <body>
