@@ -411,3 +411,23 @@ if(localStorage.he2_name)$("name").value=localStorage.he2_name;if(localStorage.h
 </script>
 </body>
 </html>
+<style>
+/* BUTTON FIX - overrides previous home overlay rules */
+.home-actions{
+ position:absolute!important;left:27%!important;top:64%!important;width:45%!important;height:10%!important;
+ display:grid!important;grid-template-columns:1.18fr 1fr!important;gap:3%!important;z-index:100!important;
+ pointer-events:auto!important;
+}
+.home-actions button{
+ display:block!important;width:100%!important;height:100%!important;min-height:44px!important;
+ margin:0!important;padding:0!important;border:0!important;background:transparent!important;
+ box-shadow:none!important;opacity:.02!important;color:transparent!important;font-size:1px!important;
+ pointer-events:auto!important;touch-action:manipulation!important;
+}
+@media(max-width:650px){
+ .home-actions{
+  left:12%!important;top:60.5%!important;width:76%!important;height:11%!important;
+  grid-template-columns:1fr!important;grid-template-rows:1fr 1fr!important;gap:5%!important;
+ }
+}
+</style>
