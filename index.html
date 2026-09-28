@@ -179,6 +179,21 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  .quiz-feedback img{width:120px;height:108px}
 }
 
+
+/* V11 mascot visibility + stage control */
+.countdown-cat{width:min(48%,210px)!important;max-height:180px!important;margin:0 auto 6px!important}
+#resultBrain{display:block!important;width:min(58%,240px)!important;max-height:220px!important;object-fit:contain!important;margin:6px auto 14px!important}
+#briefMascot{display:block!important;visibility:visible!important;opacity:1!important}
+#countdownMascot{display:block!important;visibility:visible!important;opacity:1!important}
+#resultBrain{visibility:visible!important;opacity:1!important}
+.admin-stage-group{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px;border:2px solid var(--ink);border-radius:18px;background:#fff}
+.admin-stage-group h3{grid-column:1/-1;margin:0 0 2px;text-align:left}
+@media(max-width:650px){
+ .countdown-cat{width:min(62%,180px)!important}
+ .admin-stage-group{grid-template-columns:1fr 1fr 1fr}
+ .admin-stage-group button{font-size:13px;padding:8px 5px;min-height:48px}
+}
+
 </style>
 </head>
 <body>
@@ -226,7 +241,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <button id="briefReady" class="primary">준비 완료</button>
 </section>
 <section id="countdownScreen" class="card center hidden">
-  <div class="brain">🧠</div>
+  <img id="countdownMascot" class="stage-cat countdown-cat" src="./cat-stage1.png" alt="단계 시작 고양이">
   <p class="kicker" id="stageIntro">STAGE 1 · NORMAL</p>
   <div id="countdown" class="countdown">3</div>
   <h2 id="countdownMsg">집중하세요!</h2>
@@ -244,19 +259,26 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 <section id="admin" class="card hidden">
   <div class="hud"><h2>🧠 ADMIN DASHBOARD</h2><span class="pill">참가자 <b id="adminCount">0</b>명</span></div>
   <div class="admin-grid">
-    <button class="good" data-ready-stage="1">1단계 준비</button>
-    <button class="good" data-stage="1">1단계 시작</button>
-    <button data-result="1">1단계 결과</button>
-
-    <button class="warn" data-ready-stage="2">2단계 준비</button>
-    <button class="warn" data-stage="2">2단계 시작</button>
-    <button data-result="2">2단계 결과</button>
-
-    <button class="primary" data-ready-stage="3">3단계 준비</button>
-    <button class="primary" data-stage="3">3단계 시작</button>
-    <button data-result="3">3단계 결과</button>
-
-    <button id="finalBtn">최종 결과</button><button id="kickBtn" class="danger">전체 KICK</button>
+    <div class="admin-stage-group">
+      <h3>STAGE 1</h3>
+      <button class="good" data-ready-stage="1">① 준비</button>
+      <button class="good" data-stage="1">② 시작</button>
+      <button data-result="1">③ 결과</button>
+    </div>
+    <div class="admin-stage-group">
+      <h3>STAGE 2</h3>
+      <button class="warn" data-ready-stage="2">① 준비</button>
+      <button class="warn" data-stage="2">② 시작</button>
+      <button data-result="2">③ 결과</button>
+    </div>
+    <div class="admin-stage-group">
+      <h3>STAGE 3</h3>
+      <button class="primary" data-ready-stage="3">① 준비</button>
+      <button class="primary" data-stage="3">② 시작</button>
+      <button data-result="3">③ 결과</button>
+    </div>
+    <button id="finalBtn">최종 결과</button>
+    <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
   <div id="adminStatus" class="msg">대기 중</div>
@@ -365,9 +387,9 @@ function listenAdmin(){
   if(!s.exists()){$("adminStatus").textContent="대기 중";return}
   const g=s.val();
   const labels={
-    stage1Ready:"1단계 준비 완료 · 시작 대기",stage1:"1단계 진행 중",stage1Result:"1단계 결과 공개",
-    stage2Ready:"2단계 준비 완료 · 시작 대기",stage2:"2단계 진행 중",stage2Result:"2단계 결과 공개",
-    stage3Ready:"3단계 준비 완료 · 시작 대기",stage3:"3단계 진행 중",stage3Result:"3단계 결과 공개",
+    stage1Ready:"1단계 준비화면 표시 중 · 시작 대기",stage1:"1단계 진행 중",stage1Result:"1단계 결과 공개",
+    stage2Ready:"2단계 준비화면 표시 중 · 시작 대기",stage2:"2단계 진행 중",stage2Result:"2단계 결과 공개",
+    stage3Ready:"3단계 준비화면 표시 중 · 시작 대기",stage3:"3단계 진행 중",stage3Result:"3단계 결과 공개",
     final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
   };
   $("adminStatus").textContent=labels[g.status]||`현재 상태: ${g.status}`;
@@ -376,44 +398,70 @@ function listenAdmin(){
  onValue(rr("results"),renderAdmin);
 }
 async function readyAdminStage(s){
-  await set(rr("game"),{status:`stage${s}Ready`,currentStage:s,startTime:0,duration});
+  const commandId=Date.now();
+  await set(rr("game"),{status:`stage${s}Ready`,currentStage:s,startTime:0,duration,commandId});
 }
 async function startAdminStage(s){
+  const commandId=Date.now();
   const st=Date.now()+3500;
-  await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration});
+  await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration,commandId});
 }
-async function setStatus(status){let s=+(status.match(/[123]/)||[stage||1])[0];await update(rr("game"),{status,currentStage:status==="final"?3:s});}
+async function setStatus(status){
+  let s=+(status.match(/[123]/)||[stage||1])[0];
+  await update(rr("game"),{status,currentStage:status==="final"?3:s,commandId:Date.now()});
+}
 async function resetGame(){if(!confirm("참가자와 모든 결과를 삭제하고 초기화할까요?"))return;await remove(rr());await set(rr("game"),{status:"waiting",currentStage:0,startTime:0});}
 async function kickAll(){if(!confirm("모든 참가자를 퇴장시킬까요?"))return;await remove(rr("participants"));await update(rr("game"),{status:"kicked"});}
 
 let briefingTimer=null,overloadTimer=null;
 function showStageReady(s){
-  stage=s;ended=true;clearInterval(timer);clearTimeout(popupTimer);
+  stage=s;
+  ended=true;
+  clearInterval(timer);clearTimeout(briefingTimer);clearTimeout(popupTimer);clearTimeout(overloadTimer);
+  quizOpen=false;
+
   const briefings={
-    1:{title:"절차에 따라 작업하세요",body:'화면 상단의 <b>작업방법과 NEXT 안내</b>를 확인하면서 정확한 순서로 숫자를 선택하세요.<span class="method">1 → 10 순서로 클릭</span>',img:"./cat-stage1.png"},
-    2:{title:"이제 NEXT 안내가 제공되지 않습니다",body:'화면 상단의 <b>작업방법을 확인하고 기억하여</b> 작업을 수행하세요.<br>작업방법은 작업 중 변경될 수 있습니다.',img:"./cat-stage2.png"},
-    3:{title:"마지막 작업입니다",body:'작업환경이 변하더라도 <b>현재 작업조건과 작업위치를 정확하게 유지</b>하세요.<br>중간에 나타나는 문제를 해결한 후 원래 작업으로 복귀하세요.',img:"./cat-stage3.png"}
+    1:{
+      title:"절차에 따라 작업하세요",
+      body:'화면 상단의 <b>작업방법과 NEXT 안내</b>를 확인하면서 정확한 순서로 숫자를 선택하세요.<span class="method">1 → 10 순서로 클릭</span>',
+      img:"./cat-stage1.png"
+    },
+    2:{
+      title:"이제 NEXT 안내가 제공되지 않습니다",
+      body:'화면 상단의 <b>작업방법을 확인하고 기억</b>하여 수행하세요.<br><b>작업방법은 작업 중 변경될 수 있습니다.</b><br>작업 중 나타나는 외부 요청은 확인 후 원래 작업으로 복귀하세요.',
+      img:"./cat-stage2.png"
+    },
+    3:{
+      title:"작업 중 다른 요청이 들어옵니다",
+      body:'현재 <b>작업조건과 작업위치</b>를 기억하세요.<br>작업 중 <b>긴급작업 요청</b>이 들어오면 처리한 뒤 원래 작업으로 복귀하세요.',
+      img:"./cat-stage3.png"
+    }
   };
+
   const b=briefings[s];
-  $("briefKicker").textContent="STAGE "+s;
+  $("briefKicker").textContent="STAGE "+s+" · READY";
   $("briefTitle").textContent=b.title;
-  $("briefBody").innerHTML=b.body+'<p class="small"><b>교수자의 시작을 기다려주세요.</b></p>';
+  $("briefBody").innerHTML=b.body+'<p class="small"><b>교수자의 시작 버튼을 기다려주세요.</b></p>';
   const m=$("briefMascot");
-  m.outerHTML=`<img id="briefMascot" class="stage-cat" src="${b.img}" alt="단계 ${s} 고양이">`;
+  m.src=b.img;
+  m.alt=`STAGE ${s} 준비 고양이`;
   $("briefReady").style.display="none";
   show("stageBrief");
 }
 function prepareStage(s,st,d){
   if(startKey===st)return;
   startKey=st;stage=s;duration=d||30;ended=false;
-  clearInterval(timer);clearTimeout(briefingTimer);clearTimeout(popupTimer);clearInterval(overloadTimer);
+  clearInterval(timer);clearTimeout(briefingTimer);clearTimeout(popupTimer);clearTimeout(overloadTimer);
+  quizOpen=false;
 
-  $("stageIntro").textContent="STAGE "+s;
+  $("countdownMascot").src=`./cat-stage${s}.png`;
+  $("countdownMascot").alt=`STAGE ${s} 시작 고양이`;
+  $("stageIntro").textContent="STAGE "+s+" · START";
   $("countdownMsg").textContent=s===1
     ?"절차와 NEXT를 확인하세요!"
     :s===2
       ?"작업방법을 기억하세요!"
-      :"문제 해결 후 작업위치를 기억하세요!";
+      :"긴급작업 처리 후 원래 작업으로 복귀하세요!";
   show("countdownScreen");
 
   const tick=()=>{
@@ -428,7 +476,6 @@ function prepareStage(s,st,d){
   tick();
   timer=setInterval(tick,100);
 }
-
 function beginStage(s,st,d){
  stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
  $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
@@ -519,33 +566,39 @@ function showMathQuiz(){
  const board=$("gameboard");if(board.querySelector(".game-overlay"))return;
  quizOpen=true;lastInterruption=Date.now();
  const z=makeMathQuiz(),ov=document.createElement("div");ov.className="game-overlay";
- ov.innerHTML=`<div class="quiz-card"><img class="quiz-cat" src="./cat-quiz.png" alt=""><h3>🧩 집중력 퀴즈!</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">정답을 선택한 후 원래 작업으로 복귀하세요.</p></div>`;
+ ov.innerHTML=`<div class="quiz-card"><img class="quiz-cat" src="./cat-quiz.png" alt=""><h3>🚨 긴급작업 요청</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">긴급 요청을 처리한 후 원래 작업으로 복귀하세요.</p></div>`;
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
    if(!ok){wrong++;auxiliaryErrors++;score-=30;$("score").textContent=score}
    ov.remove();quizOpen=false;
    showQuizFeedback(ok);
-   flashFeedback(ok?"퀴즈 완료 · 원래 작업으로 복귀하세요.":"퀴즈 오답 · 원래 작업위치를 다시 확인하세요.");
+   flashFeedback(ok?"긴급작업 처리 완료 · 원래 작업으로 복귀하세요.":"긴급작업 처리 오류 · 원래 작업위치를 다시 확인하세요.");
  });
  board.appendChild(ov);
 }
 function showQuizFeedback(ok){
  const board=$("gameboard");
  const d=document.createElement("div");d.className="quiz-feedback";
- d.innerHTML=`<img src="./${ok?"cat-correct.png":"cat-wrong.png"}" alt=""><b>${ok?"정답!":"오답!"}</b>`;
+ d.innerHTML=`<img src="./${ok?"cat-correct.png":"cat-wrong.png"}" alt=""><b>${ok?"처리 완료!":"처리 오류!"}</b>`;
  board.appendChild(d);setTimeout(()=>d.remove(),900);
 }
 function scheduleOverload(){
- clearInterval(overloadTimer);
- overloadTimer=setInterval(()=>{
-   if(ended){clearInterval(overloadTimer);return}
-   if(!quizOpen)showMathQuiz();
- },5000);
+ clearTimeout(overloadTimer);
+ const next=()=>{
+   if(ended||stage!==3)return;
+   const delay=8000+Math.floor(Math.random()*2001);
+   overloadTimer=setTimeout(()=>{
+     if(ended||stage!==3)return;
+     if(!quizOpen)showMathQuiz();
+     next();
+   },delay);
+ };
+ next();
 }
 function flashNotice(text,ms=1300){const board=$("gameboard"),d=document.createElement("div");d.className="toast";d.textContent=text;board.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function addSticker(){const board=$("gameboard"),d=document.createElement("span");d.className="sticker";d.textContent=["⭐","⚡","❗","💥","🔔"][Math.floor(Math.random()*5)];d.style.left=Math.random()*85+"%";d.style.top=15+Math.random()*70+"%";board.appendChild(d);setTimeout(()=>d.remove(),2400)}
 async function finishStage(){
- if(ended)return;ended=true;clearInterval(timer);clearTimeout(popupTimer);clearInterval(overloadTimer);
+ if(ended)return;ended=true;clearInterval(timer);clearTimeout(popupTimer);clearTimeout(overloadTimer);
  const attempts=correct+wrong,errorRate=attempts?wrong/attempts*100:0,key=`he2_${roomId}_${stage}_${startKey}`;
  if(!localStorage.getItem(key)){
    await set(rr(`results/stage${stage}/${pid}`),{
@@ -564,8 +617,16 @@ async function finishStage(){
 async function getStage(s){const x=await get(rr(`results/stage${s}`));return Object.entries(x.val()||{}).map(([id,v])=>({...v,pid:v.pid||id}))}
 function rankRows(a){return a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}<div class="small">정답 ${x.correct||0} · 오답 ${x.wrong||0} · 오류율 ${(x.errorRate||0).toFixed(1)}%</div></span><strong>${x.score||0}점</strong></div>`).join("")||'<div class="msg">아직 결과가 없습니다.</div>'}
 async function showResults(s){
- stage=s;const a=await getStage(s);a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);$("resultTitle").textContent=`STAGE ${s} RANKING`;$("resultBrain").src="./cat-result.png";$("resultRank").innerHTML=rankRows(a);
- $("myAnalysis").innerHTML="";show("result");
+  stage=s;
+  const a=await getStage(s);
+  a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);
+  $("resultTitle").textContent=`STAGE ${s} RANKING`;
+  $("resultBrain").src="./cat-result.png";
+  $("resultBrain").alt=`STAGE ${s} 결과 고양이`;
+  $("resultBrain").style.display="block";
+  $("resultRank").innerHTML=rankRows(a);
+  $("myAnalysis").innerHTML="";
+  show("result");
 }
 async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
 async function errorStats(){const out=[];for(let s=1;s<=3;s++){const a=await getStage(s),c=a.reduce((z,x)=>z+(+x.correct||0),0),w=a.reduce((z,x)=>z+(+x.wrong||0),0);out.push({s,rate:c+w?w/(c+w)*100:0})}return out}
