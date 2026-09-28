@@ -122,7 +122,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 .work-method span{font-size:14px;font-weight:1000;background:white;border:2px solid var(--ink);border-radius:999px;padding:5px 9px}
 .work-method strong{font-size:clamp(21px,5vw,34px);font-weight:1000;line-height:1.15}
 .work-method.changed{animation:methodPulse .55s 2}
-@keyframes methodPulse{50%{transform:scale(1.025);background:var(--pink)}}
+@keyframes methodPulse{0%,100%{transform:scale(1);background:var(--yellow)}50%{transform:scale(1.04);background:var(--pink)}}
 @media(max-width:650px){
   .work-method{position:sticky;top:4px;z-index:30;flex-direction:column;gap:5px;padding:8px}
   .work-method strong{font-size:22px}
@@ -192,6 +192,22 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  .countdown-cat{width:min(62%,180px)!important}
  .admin-stage-group{grid-template-columns:1fr 1fr 1fr}
  .admin-stage-group button{font-size:13px;padding:8px 5px;min-height:48px}
+}
+
+
+/* V14 admin live dashboard + final message */
+.admin-metrics{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:8px;margin:10px 0 14px}
+.metric{border:2px solid var(--ink);border-radius:16px;padding:10px;background:white;text-align:center}
+.metric b{display:block;font-size:24px;margin-top:4px}
+.progress-card{border:2px solid var(--ink);border-radius:16px;background:white;padding:11px;display:grid;grid-template-columns:1.2fr .8fr 1.4fr .9fr;gap:8px;align-items:center}
+.progress-card .who{font-weight:1000}.progress-card .sub{font-size:12px;color:#6d667b}
+.final-admin-box{border:3px solid var(--ink);border-radius:20px;background:#fffdf8;padding:14px;margin-top:16px}
+.final-admin-box textarea{width:100%;min-height:120px;resize:vertical;border:3px solid var(--ink);border-radius:15px;padding:12px;font:inherit;background:white;color:var(--ink)}
+#adminFinalPreview{margin-top:10px}
+#professorMessage{font-size:clamp(18px,4vw,26px);line-height:1.55;background:white;border:3px solid var(--ink);border-radius:18px;padding:16px;margin:14px 0;white-space:pre-wrap}
+@media(max-width:650px){
+ .admin-metrics{grid-template-columns:repeat(2,1fr)}
+ .progress-card{grid-template-columns:1fr 1fr}.progress-card .wide{grid-column:1/-1}
 }
 
 </style>
@@ -277,13 +293,31 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
       <button class="primary" data-stage="3">② 시작</button>
       <button data-result="3">③ 결과</button>
     </div>
-    <button id="finalBtn">최종 결과</button>
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div>
-  <h3>참가자</h3><div id="people" class="list"></div>
-  <h3>RANKING / ANALYSIS</h3><div id="adminRank" class="list"></div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V14 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <h3>📡 실시간 진행현황</h3>
+  <div id="liveSummary" class="admin-metrics"></div>
+  <div id="people" class="list"></div>
+
+  <h3>📊 단계별 전체 오답률</h3>
+  <div id="adminErrorStats" class="analysis"></div>
+
+  <h3>🏆 현재 단계 랭킹</h3><div id="adminRank" class="list"></div>
+
+  <div class="final-admin-box">
+    <h3>🎤 최종 운영</h3>
+    <button id="previewFinalBtn" class="good">관리자 최종집계 확인</button>
+    <div id="adminFinalPreview"></div>
+    <label class="small" for="finalMessageInput"><b>교육생에게 보여줄 최종 멘트</b></label>
+    <textarea id="finalMessageInput">100번의 정확한 수행도 중요하지만, 단 한 번의 오류가 안전에 영향을 줄 수 있습니다.
+개인의 집중력에만 의존하지 않고 절차, 자기확인, 작업위치 표시, 동료확인과 같은 인적오류예방기법을 활용해야 합니다.</textarea>
+    <div>
+      <button id="sendFinalMessageBtn" class="warn">① 최종 멘트 전송</button>
+      <button id="finalBtn" class="primary">② 최종 결과 공개</button>
+    </div>
+  </div>
 </section>
 
 <section id="game" class="card center hidden">
@@ -313,8 +347,9 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <img class="stage-cat" src="./cat-final.png" alt="안전 메시지 고양이">
   <h1>게임이 어려워진 이유는 무엇이었을까요?</h1>
   <h2>당신의 능력이 갑자기 떨어진 것이 아닙니다.</h2>
-  <div class="lesson"><b>절차 제공 → 기억 의존 → 주의분산 → 작업조건 변화 → 작업중단 → 다른 업무 → 작업복귀</b><h2>달라진 것은 작업환경이었습니다.</h2></div>
-  <button id="seeResult" class="primary">나의 결과 확인</button>
+  <div id="professorMessage">교수자의 최종 메시지를 기다려주세요.</div>
+  <div class="lesson"><b>절차 제공 → 기억 의존 → 주의분산 → 작업조건 변화 → 작업중단 → 긴급작업 → 작업복귀</b><h2>달라진 것은 작업환경이었습니다.</h2></div>
+  <button id="seeResult" class="primary" style="display:none">나의 결과 확인</button>
 </section>
 <section id="final" class="card hidden">
   <div class="center"><img class="stage-cat" src="./cat-final.png" alt="최종 결과 고양이"><h1>FINAL REPORT</h1></div>
@@ -351,6 +386,7 @@ let distractionErrors=0,interruptionErrors=0,conditionErrors=0,auxiliaryErrors=0
 let roundIndex=0,roundPos=0;
 const CONDITIONS=[
  {label:"1 → 10 순서로 클릭",seq:[1,2,3,4,5,6,7,8,9,10]},
+ {label:"10 → 1 순서로 클릭",seq:[10,9,8,7,6,5,4,3,2,1]},
  {label:"홀수만 1 → 9 순서로 클릭",seq:[1,3,5,7,9]},
  {label:"짝수만 10 → 2 순서로 클릭",seq:[10,8,6,4,2]},
  {label:"3의 배수만 3 → 9 순서로 클릭",seq:[3,6,9]}
@@ -359,44 +395,85 @@ let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.
 const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
 const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));$(id)?.classList.remove("hidden")};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function updateMyProgress(patch={}){
+ if(!roomId||!name)return;
+ try{await update(rr(`participants/${pid}`),{name,updatedAt:Date.now(),...patch})}catch(e){}
+}
+const phaseLabel=p=>({waiting:"대기",ready:"준비",countdown:"카운트",playing:"진행 중",finished:"완료",result:"결과 확인",finalMessage:"최종멘트",final:"최종결과"}[p]||p||"대기");
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.go)show(b.dataset.go);if(b.dataset.readyStage)readyAdminStage(+b.dataset.readyStage);if(b.dataset.stage)startAdminStage(+b.dataset.stage);if(b.dataset.result)setStatus(`stage${b.dataset.result}Result`)});
-$("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onclick=()=>setStatus("final");$("resetBtn").onclick=resetGame;$("kickBtn").onclick=kickAll;
+$("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onclick=releaseFinalResults;$("previewFinalBtn").onclick=previewAdminFinal;$("sendFinalMessageBtn").onclick=sendFinalMessage;$("resetBtn").onclick=resetGame;$("kickBtn").onclick=kickAll;
 
 async function joinGame(){
  name=$("name").value.trim();roomId=$("room").value.trim().toUpperCase();
  if(!name||!roomId){$("joinMsg").textContent="이름과 ROOM CODE를 입력하세요.";return}
- try{localStorage.he2_name=name;localStorage.he2_room=roomId;await set(rr(`participants/${pid}`),{name,joinedAt:Date.now()});$("roomLabel").textContent=roomId;listenParticipant();showReady()}
+ try{localStorage.he2_name=name;localStorage.he2_room=roomId;await set(rr(`participants/${pid}`),{name,joinedAt:Date.now(),phase:"waiting",currentStage:0,score:0,correct:0,wrong:0,roundIndex:0,condition:"대기",updatedAt:Date.now()});$("roomLabel").textContent=roomId;listenParticipant();showReady()}
  catch(e){$("joinMsg").textContent="접속 실패: "+e.message}
 }
-function showReady(){clearInterval(timer);clearTimeout(popupTimer);$("readyText").textContent="READY!";$("waitingTitle").textContent="참가 완료!";$("waitingMsg").textContent="교수자의 게임 시작을 기다려주세요.";$("brainWait").src="./cat-ready.png";show("waiting")}
+function showReady(){clearInterval(timer);clearTimeout(popupTimer);updateMyProgress({phase:"waiting",currentStage:0,condition:"대기"});$("readyText").textContent="READY!";$("waitingTitle").textContent="참가 완료!";$("waitingMsg").textContent="교수자의 게임 시작을 기다려주세요.";$("brainWait").src="./cat-ready.png";show("waiting")}
 function listenParticipant(){
  onValue(rr("participants"),s=>{$("count").textContent=Object.keys(s.val()||{}).length;if(!s.child(pid).exists()){localStorage.removeItem("he2_room");show("home")}});
  onValue(rr("game"),s=>{if(!s.exists())return;const g=s.val()||{};
    if(/^stage[123]Ready$/.test(g.status))showStageReady(+g.currentStage);
    else if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
    else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
-   else if(g.status==="final")show("finalMessage");
+   else if(g.status==="finalMessage")showFinalMessage(false);
+   else if(g.status==="final")showFinalMessage(true);
    else if(g.status==="waiting")showReady();
    else if(g.status==="kicked")show("home");
  });
 }
 function adminLogin(){if($("pw").value!==SETTINGS.ADMIN_PASSWORD){alert("비밀번호가 올바르지 않습니다.");return}roomId=$("adminRoom").value.trim().toUpperCase();if(!roomId)return alert("ROOM CODE를 입력하세요.");duration=+$("duration").value||30;show("admin");listenAdmin()}
 function listenAdmin(){
- onValue(rr("participants"),s=>{const a=Object.values(s.val()||{});$("adminCount").textContent=a.length;$("people").innerHTML=a.length?a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}</span><strong>READY</strong></div>`).join(""):'<div class="msg">아직 참가자가 없습니다.</div>'});
+ onValue(rr("participants"),s=>{
+   const data=s.val()||{};
+   renderAdminPeople(data);
+   renderLiveSummary(data);
+ });
  onValue(rr("game"),s=>{
   if(!s.exists()){$("adminStatus").textContent="대기 중";return}
   const g=s.val();
+  window.__adminCurrentStage=+g.currentStage||0;
   const labels={
     stage1Ready:"1단계 준비화면 표시 중 · 시작 대기",stage1:"1단계 카운트/진행 중",stage1Result:"1단계 결과 공개",
     stage2Ready:"2단계 준비화면 표시 중 · 시작 대기",stage2:"2단계 카운트/진행 중",stage2Result:"2단계 결과 공개",
     stage3Ready:"3단계 준비화면 표시 중 · 시작 대기",stage3:"3단계 카운트/진행 중",stage3Result:"3단계 결과 공개",
-    final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
+    finalMessage:"최종 멘트 표시 중",final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
   };
   $("adminStatus").textContent=labels[g.status]||`현재 상태: ${g.status}`;
   renderAdmin();
-});
- onValue(rr("results"),renderAdmin);
+ });
+ onValue(rr("results"),s=>{
+   window.__adminResults=s.val()||{};
+   renderAdminErrorStats(window.__adminResults);
+   renderAdmin();
+ });
 }
+function renderAdminPeople(data){
+ const a=Object.values(data||{}).sort((x,y)=>(x.name||"").localeCompare(y.name||"","ko"));
+ $("adminCount").textContent=a.length;
+ $("people").innerHTML=a.length?a.map((x,i)=>`<div class="progress-card"><div><span class="who">${i+1}. ${esc(x.name)}</span><div class="sub">STAGE ${x.currentStage||"-"} · ${phaseLabel(x.phase)}</div></div><div><b>${x.score||0}점</b><div class="sub">점수</div></div><div class="wide"><b>${esc(x.condition||"-")}</b><div class="sub">라운드 ${(x.roundIndex||0)+1} · 진행 ${x.roundPos||0}</div></div><div><b>${x.correct||0}/${x.wrong||0}</b><div class="sub">정답/오답</div></div></div>`).join(""):'<div class="msg">아직 참가자가 없습니다.</div>';
+}
+function renderLiveSummary(data){
+ const a=Object.values(data||{}), s=window.__adminCurrentStage||0;
+ const same=a.filter(x=>(+x.currentStage||0)===s);
+ const ready=same.filter(x=>x.phase==="ready").length;
+ const playing=same.filter(x=>x.phase==="countdown"||x.phase==="playing").length;
+ const done=same.filter(x=>x.phase==="finished"||x.phase==="result").length;
+ const c=same.reduce((z,x)=>z+(+x.correct||0),0),w=same.reduce((z,x)=>z+(+x.wrong||0),0),rate=c+w?w/(c+w)*100:0;
+ $("liveSummary").innerHTML=[
+  ["전체",a.length+"명"],["준비",ready+"명"],["진행",playing+"명"],["완료",done+"명"],["실시간 오답률",(c+w?rate.toFixed(1):"-")+ (c+w?"%":"")]
+ ].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+}
+function renderAdminErrorStats(results){
+ let tc=0,tw=0;const cards=[];
+ for(let s=1;s<=3;s++){
+  const a=Object.values((results||{})[`stage${s}`]||{}),c=a.reduce((z,x)=>z+(+x.correct||0),0),w=a.reduce((z,x)=>z+(+x.wrong||0),0);
+  tc+=c;tw+=w;cards.push({label:`STAGE ${s}`,rate:c+w?w/(c+w)*100:null});
+ }
+ cards.push({label:"전체 과정",rate:tc+tw?tw/(tc+tw)*100:null});
+ $("adminErrorStats").innerHTML=cards.map(x=>`<div class="stat"><span>${x.label}</span><b>${x.rate==null?"-":x.rate.toFixed(1)+"%"}</b><small>전체 오답률</small></div>`).join("");
+}
+
 async function readyAdminStage(s){
   const commandId=Date.now();
   await set(rr("game"),{status:`stage${s}Ready`,currentStage:s,startTime:0,duration,commandId});
@@ -422,8 +499,8 @@ function showStageReady(s){
 
   const briefings={
     1:{
-      title:"절차에 따라 작업하세요",
-      body:'화면 상단의 <b>작업방법과 NEXT 안내</b>를 확인하면서 정확한 순서로 숫자를 선택하세요.<span class="method">1 → 10 순서로 클릭</span>',
+      title:"절차와 가이드에 따라 작업하세요",
+      body:'화면 상단의 <b>작업방법</b>을 확인하고, 화면에 표시되는 <b>NEXT 안내와 강조 숫자</b>를 따라 정확하게 수행하세요.<br><b>작업방법은 라운드마다 변경될 수 있습니다.</b><span class="method">작업방법 확인 → NEXT 확인 → 정확하게 클릭</span>',
       img:"./cat-stage1.png"
     },
     2:{
@@ -446,6 +523,7 @@ function showStageReady(s){
   m.src=b.img;
   m.alt=`STAGE ${s} 준비 고양이`;
   $("briefReady").style.display="none";
+  updateMyProgress({phase:"ready",currentStage:s,score:0,correct:0,wrong:0,roundIndex:0,roundPos:0,condition:"단계 안내"});
   show("stageBrief");
 }
 function prepareStage(s,st,d){
@@ -462,6 +540,7 @@ function prepareStage(s,st,d){
     :s===2
       ?"작업방법을 기억하세요!"
       :"긴급작업 처리 후 원래 작업으로 복귀하세요!";
+  updateMyProgress({phase:"countdown",currentStage:s,condition:"START"});
   show("countdownScreen");
 
   const seq=["3","2","1","GO!"];
@@ -483,16 +562,17 @@ function prepareStage(s,st,d){
 function beginStage(s,st,d){
  stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
  $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
-$("instruction").textContent=s===1?"절차 제공: NEXT 숫자를 따라 작업하세요.":"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다.";
-$("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;setRound();
+$("instruction").textContent=s===1?"절차 제공: 작업방법을 확인하고 NEXT 안내를 따라 작업하세요.":"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다.";
+$("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;updateMyProgress({phase:"playing",currentStage:s,score:0,correct:0,wrong:0,roundIndex:0,roundPos:0,condition:"시작"});setRound();
  if(s===2)scheduleDistraction();if(s===3)scheduleOverload();
  const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
 }
-function currentCondition(){return stage===1?CONDITIONS[0]:CONDITIONS[roundIndex%CONDITIONS.length]}
+function currentCondition(){return CONDITIONS[roundIndex%CONDITIONS.length]}
 function setRound(){
   roundPos=0; const c=currentCondition();
   $("instruction").textContent=(stage===1?"절차 제공 · ":"작업조건 · ")+c.label; $("condition").textContent=c.label;const wm=$("workMethod");if(wm){wm.classList.remove("changed");void wm.offsetWidth;wm.classList.add("changed");}
   if(stage===1)$("nextNo").textContent=c.seq[0]; else $("nextNo").textContent="—";
+  updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:c.label});
   drawNumbers();
 }
 function drawNumbers(){
@@ -523,6 +603,7 @@ function pick(n){
  }
  $("score").textContent=score;
  $("bar").style.width=(roundPos/currentCondition().seq.length*100)+"%";
+ updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:currentCondition().label});
 }
 function markTarget(){
  const exp=currentCondition().seq[roundPos];
@@ -574,6 +655,7 @@ function showMathQuiz(){
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
    if(!ok){wrong++;auxiliaryErrors++;score-=30;$("score").textContent=score}
+   updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:currentCondition().label});
    ov.remove();quizOpen=false;
    showQuizFeedback(ok);
    flashFeedback(ok?"긴급작업 처리 완료 · 원래 작업으로 복귀하세요.":"긴급작업 처리 오류 · 원래 작업위치를 다시 확인하세요.");
@@ -612,6 +694,7 @@ async function finishStage(){
    });
    localStorage.setItem(key,"1");
  }
+ updateMyProgress({phase:"finished",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:"단계 완료"});
  $("brainWait").src="./cat-result.png";
  $("readyText").textContent="FINISH!";
  $("waitingTitle").textContent=`STAGE ${stage} 종료`;
@@ -630,11 +713,34 @@ async function showResults(s){
   $("resultBrain").style.display="block";
   $("resultRank").innerHTML=rankRows(a);
   $("myAnalysis").innerHTML="";
+  updateMyProgress({phase:"result",currentStage:s,condition:"결과 확인"});
   show("result");
+}
+async function previewAdminFinal(){
+ const a=await buildFinal(),stats=await errorStats();
+ const overallC=a.reduce((z,x)=>z+(+x.correct||0),0),overallW=a.reduce((z,x)=>z+(+x.wrong||0),0),overall=overallC+overallW?overallW/(overallC+overallW)*100:0;
+ $("adminFinalPreview").innerHTML=`<div class="msg"><b>최종 참가자 ${a.length}명 · 전체 오답률 ${overall.toFixed(1)}%</b><br><span class="small">${stats.map(x=>`STAGE ${x.s} ${x.rate.toFixed(1)}%`).join(" · ")}</span></div>`+rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));
+}
+async function sendFinalMessage(){
+ const text=$("finalMessageInput").value.trim();
+ if(!text)return alert("최종 멘트를 입력하세요.");
+ await set(rr("finalMessage"),{text,updatedAt:Date.now()});
+ await update(rr("game"),{status:"finalMessage",currentStage:3,commandId:Date.now()});
+}
+async function releaseFinalResults(){
+ await update(rr("game"),{status:"final",currentStage:3,commandId:Date.now()});
+}
+async function showFinalMessage(canSeeResult){
+ let text="교수자의 최종 메시지를 기다려주세요.";
+ try{const s=await get(rr("finalMessage"));if(s.exists()&&s.val().text)text=s.val().text}catch(e){}
+ $("professorMessage").textContent=text;
+ $("seeResult").style.display=canSeeResult?"inline-block":"none";
+ updateMyProgress({phase:canSeeResult?"final":"finalMessage",currentStage:3,condition:canSeeResult?"최종결과 공개":"최종멘트 확인"});
+ show("finalMessage");
 }
 async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
 async function errorStats(){const out=[];for(let s=1;s<=3;s++){const a=await getStage(s),c=a.reduce((z,x)=>z+(+x.correct||0),0),w=a.reduce((z,x)=>z+(+x.wrong||0),0);out.push({s,rate:c+w?w/(c+w)*100:0})}return out}
-async function showFinal(){const a=await buildFinal(),stats=await errorStats();$("finalRank").innerHTML=rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));$("errorStats").innerHTML=stats.map((x,i)=>`<div class="stat"><span>${["NORMAL","DISTRACTION","OVERLOAD"][i]}</span><b>${x.rate.toFixed(1)}%</b><small>오류율</small></div>`).join("");show("final")}
+async function showFinal(){updateMyProgress({phase:"final",currentStage:3,condition:"최종결과"});const a=await buildFinal(),stats=await errorStats();$("finalRank").innerHTML=rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));$("errorStats").innerHTML=stats.map((x,i)=>`<div class="stat"><span>${["NORMAL","DISTRACTION","OVERLOAD"][i]}</span><b>${x.rate.toFixed(1)}%</b><small>오류율</small></div>`).join("");show("final")}
 async function renderAdmin(){if(!roomId)return;const g=await get(rr("game"));if(!g.exists())return;const s=+g.val().currentStage||1,a=await getStage(s);a.sort((x,y)=>y.score-x.score);$("adminRank").innerHTML=rankRows(a)}
 $("seeResult").onclick=showFinal;
 if(localStorage.he2_name)$("name").value=localStorage.he2_name;if(localStorage.he2_room)$("room").value=localStorage.he2_room;
