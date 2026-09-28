@@ -210,6 +210,18 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  .progress-card{grid-template-columns:1fr 1fr}.progress-card .wide{grid-column:1/-1}
 }
 
+.score-gain{
+ position:absolute;right:16px;top:16px;z-index:95;
+ font-size:32px;font-weight:1000;background:var(--mint);
+ border:3px solid var(--ink);border-radius:16px;padding:5px 11px;
+ box-shadow:3px 4px 0 var(--ink);pointer-events:none;
+ animation:scorePop .65s ease-out forwards;
+}
+@keyframes scorePop{
+ 0%{transform:translateY(8px) scale(.85);opacity:0}
+ 35%{transform:translateY(0) scale(1.08);opacity:1}
+ 100%{transform:translateY(-22px) scale(1);opacity:0}
+}
 </style>
 </head>
 <body>
@@ -296,7 +308,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V16 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V17 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
   <h3>📡 실시간 진행현황</h3>
   <div id="liveSummary" class="admin-metrics"></div>
   <div id="people" class="list"></div>
@@ -325,6 +337,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <span class="pill">STAGE <b id="stageNo">1</b></span>
     <span class="pill">NEXT <b id="nextNo">1</b></span>
     <span class="pill">⏱ <b id="time">30</b>s</span>
+    <span class="pill">🔥 COMBO <b id="combo">0</b></span>
     <span class="pill">SCORE <b id="score">0</b></span>
   </div>
   <div class="progress"><div id="bar" class="bar"></div></div>
@@ -381,7 +394,7 @@ import {firebaseConfig} from "./firebase-config.js";
 
 const SETTINGS={DEFAULT_ROOM:"2050",ADMIN_PASSWORD:"son",NUMBER_COUNT:10,POPUP_MIN_MS:2800,POPUP_MAX_MS:5200};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),$=id=>document.getElementById(id);
-let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,timer=null,popupTimer=null,ended=true,startKey=0,duration=30;
+let roomId="",name="",stage=0,score=0,correct=0,wrong=0,next=1,combo=0,timer=null,popupTimer=null,ended=true,startKey=0,duration=30;
 let distractionErrors=0,interruptionErrors=0,conditionErrors=0,auxiliaryErrors=0,lastDistraction=0,lastInterruption=0,lastCondition=0,quizOpen=false;
 let roundIndex=0,roundPos=0;
 const CONDITIONS=[
@@ -500,7 +513,7 @@ function showStageReady(s){
   const briefings={
     1:{
       title:"절차와 가이드에 따라 작업하세요",
-      body:'화면 상단의 <b>작업방법</b>을 확인하고, 화면에 표시되는 <b>NEXT 안내와 강조 숫자</b>를 따라 정확하게 수행하세요.<br><b>작업방법은 라운드마다 변경될 수 있습니다.</b><span class="method">작업방법 확인 → NEXT 확인 → 정확하게 클릭</span>',
+      body:'화면 상단의 <b>작업방법</b>을 확인하고, 화면에 표시되는 <b>NEXT 안내와 강조 숫자</b>를 따라 정확하게 수행하세요.<br><b>작업방법은 라운드마다 변경될 수 있습니다.</b><br><b>연속 정답: 10점 → 11점 → 12점… / 오답 시 콤보 초기화</b><span class="method">작업방법 확인 → NEXT 확인 → 정확하게 클릭</span>',
       img:"./cat-stage1.png"
     },
     2:{
@@ -560,10 +573,10 @@ function prepareStage(s,st,d){
   },700);
 }
 function beginStage(s,st,d){
- stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
- $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
+ stage=s;score=correct=wrong=0;combo=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
+ $("stageNo").textContent=s;$("score").textContent=0;$("combo").textContent=0;$("nextNo").textContent=s===1?1:"—";
 $("instruction").textContent=s===1?"절차 제공: 작업방법을 확인하고 NEXT 안내를 따라 작업하세요.":s===2?"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다. · 오답 -20점":"작업조건을 기억하고 수행하세요. 긴급작업 처리 오류 및 작업 오답 -50점";
-$("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;updateMyProgress({phase:"playing",currentStage:s,score:0,correct:0,wrong:0,roundIndex:0,roundPos:0,condition:"시작"});setRound();
+$("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;updateMyProgress({phase:"playing",currentStage:s,score:0,correct:0,wrong:0,combo:0,roundIndex:0,roundPos:0,condition:"시작"});setRound();
  if(s===2)scheduleDistraction();if(s===3)scheduleOverload();
  const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
 }
@@ -572,7 +585,7 @@ function setRound(){
   roundPos=0; const c=currentCondition();
   $("instruction").textContent=(stage===1?"절차 제공 · ":"작업조건 · ")+c.label; $("condition").textContent=c.label;const wm=$("workMethod");if(wm){wm.classList.remove("changed");void wm.offsetWidth;wm.classList.add("changed");}
   if(stage===1)$("nextNo").textContent=c.seq[0]; else $("nextNo").textContent="—";
-  updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:c.label});
+  updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,combo,roundIndex,roundPos,condition:c.label});
   drawNumbers();
 }
 function drawNumbers(){
@@ -592,18 +605,27 @@ function pick(n){
  if(ended)return;
  const c=currentCondition(),expected=c.seq[roundPos];
  if(n===expected){
-   correct++;score+=10;roundPos++;
+   correct++;
+   const gain=10+combo;
+   score+=gain;
+   combo++;
+   $("combo").textContent=combo;
+   flashScoreGain(gain);
+   roundPos++;
    if(roundPos>=c.seq.length){roundIndex++;setRound()}
    else{if(stage===1)$("nextNo").textContent=c.seq[roundPos];markTarget()}
  }else{
-   wrong++;score-=stage===1?0:stage===2?20:50;
+   wrong++;
+   combo=0;
+   $("combo").textContent=0;
+   score-=stage===1?0:stage===2?20:50;
    const now=Date.now();if(now-lastDistraction<3000)distractionErrors++;
    if(now-lastInterruption<4500)interruptionErrors++;conditionErrors++;
    flashFeedback(c.seq.slice(0,roundPos).includes(n)?"이미 완료한 작업입니다.":"작업순서를 다시 확인하세요.");
  }
  $("score").textContent=score;
  $("bar").style.width=(roundPos/currentCondition().seq.length*100)+"%";
- updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:currentCondition().label});
+ updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,combo,roundIndex,roundPos,condition:currentCondition().label});
 }
 function markTarget(){
  const exp=currentCondition().seq[roundPos];
@@ -611,6 +633,13 @@ function markTarget(){
 }
 function flashFeedback(text){
  const board=$("gameboard"),d=document.createElement("div");d.className="toast";d.textContent="⚠️ "+text;board.appendChild(d);setTimeout(()=>d.remove(),900);
+}
+function flashScoreGain(gain){
+ const board=$("gameboard"),d=document.createElement("div");
+ d.className="score-gain";
+ d.textContent=`+${gain}`;
+ board.appendChild(d);
+ setTimeout(()=>d.remove(),650);
 }
 function scheduleDistraction(){
  clearTimeout(popupTimer);if(ended)return;
@@ -681,8 +710,20 @@ function showMathQuiz(){
  ov.innerHTML=`<div class="quiz-card"><img class="quiz-cat" src="./cat-quiz.png" alt=""><h3>🚨 긴급작업 요청</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">긴급 요청을 처리한 후 원래 작업으로 복귀하세요.</p></div>`;
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
-   if(!ok){wrong++;auxiliaryErrors++;score-=50;$("score").textContent=score}
-   updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:currentCondition().label});
+   if(ok){
+     const gain=10+combo;
+     score+=gain;
+     combo++;
+     $("combo").textContent=combo;
+     $("score").textContent=score;
+     flashScoreGain(gain);
+   }else{
+     wrong++;auxiliaryErrors++;score-=50;
+     combo=0;
+     $("combo").textContent=0;
+     $("score").textContent=score;
+   }
+   updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,combo,roundIndex,roundPos,condition:currentCondition().label});
    ov.remove();quizOpen=false;
    showQuizFeedback(ok);
    flashFeedback(ok?"긴급작업 처리 완료 · 원래 작업으로 복귀하세요.":"긴급작업 처리 오류 · 원래 작업위치를 다시 확인하세요.");
