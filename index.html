@@ -159,6 +159,26 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  .popup-card,.quiz-card{width:96%;padding:14px}
 }
 
+
+/* V8 explicit mascot images */
+.stage-cat{
+  display:block;width:min(58%,280px);max-height:260px;object-fit:contain;
+  margin:6px auto 12px;border:0;background:transparent;box-shadow:none;
+}
+@media(max-width:650px){.stage-cat{width:min(72%,240px);max-height:220px}}
+
+
+/* V9 mascot integration */
+.popup-cat{display:block;width:118px;height:105px;object-fit:cover;object-position:center 22%;margin:-8px auto 4px;border-radius:20px}
+.quiz-cat{display:block;width:105px;height:90px;object-fit:cover;object-position:center 22%;margin:-8px auto 2px;border-radius:18px}
+.quiz-feedback{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font-size:28px;font-weight:1000}
+.quiz-feedback img{width:145px;height:130px;object-fit:cover;object-position:center 22%;border-radius:24px}
+.stage-cat{border-radius:24px}
+@media(max-width:650px){
+ .popup-cat{width:100px;height:88px}.quiz-cat{width:92px;height:78px}
+ .quiz-feedback img{width:120px;height:108px}
+}
+
 </style>
 </head>
 <body>
@@ -184,7 +204,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 </section>
 
 <section id="waiting" class="card center hidden">
-  <img id="brainWait" class="stage-cat" src="./he2-ready.png" alt="준비하는 고양이">
+  <img id="brainWait" class="stage-cat" src="./cat-ready.png" alt="준비하는 고양이">
   <div id="readyText" class="ready">READY!</div>
   <h2 id="waitingTitle">참가 완료!</h2>
   <div class="msg" style="text-align:left">
@@ -199,7 +219,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 </section>
 
 <section id="stageBrief" class="card center hidden">
-  <img id="briefMascot" class="stage-cat" src="./he2-stage1.png" alt="단계 안내 고양이">
+  <img id="briefMascot" class="stage-cat" src="./cat-stage1.png" alt="단계 안내 고양이">
   <span id="briefKicker" class="kicker">STAGE</span>
   <h1 id="briefTitle"></h1>
   <div id="briefBody" class="stage-brief-body"></div>
@@ -224,9 +244,18 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 <section id="admin" class="card hidden">
   <div class="hud"><h2>🧠 ADMIN DASHBOARD</h2><span class="pill">참가자 <b id="adminCount">0</b>명</span></div>
   <div class="admin-grid">
-    <button class="good" data-stage="1">1단계 START</button><button data-result="1">1단계 결과</button>
-    <button class="warn" data-stage="2">2단계 START</button><button data-result="2">2단계 결과</button>
-    <button class="primary" data-stage="3">3단계 START</button><button data-result="3">3단계 결과</button>
+    <button class="good" data-ready-stage="1">1단계 준비</button>
+    <button class="good" data-stage="1">1단계 시작</button>
+    <button data-result="1">1단계 결과</button>
+
+    <button class="warn" data-ready-stage="2">2단계 준비</button>
+    <button class="warn" data-stage="2">2단계 시작</button>
+    <button data-result="2">2단계 결과</button>
+
+    <button class="primary" data-ready-stage="3">3단계 준비</button>
+    <button class="primary" data-stage="3">3단계 시작</button>
+    <button data-result="3">3단계 결과</button>
+
     <button id="finalBtn">최종 결과</button><button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
@@ -251,7 +280,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 </section>
 
 <section id="result" class="card hidden">
-  <img id="resultBrain" class="stage-cat" src="./he2-result.png" alt="결과 고양이">
+  <img id="resultBrain" class="stage-cat" src="./cat-result.png" alt="결과 고양이">
   <h2 id="resultTitle">STAGE RESULT</h2>
   <div id="resultRank" class="list"></div>
   <div id="myAnalysis"></div>
@@ -259,14 +288,14 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 </section>
 
 <section id="finalMessage" class="card center hidden">
-  <img class="stage-cat" src="./he2-result.png" alt="안전 메시지 고양이">
+  <img class="stage-cat" src="./cat-result.png" alt="안전 메시지 고양이">
   <h1>게임이 어려워진 이유는 무엇이었을까요?</h1>
   <h2>당신의 능력이 갑자기 떨어진 것이 아닙니다.</h2>
   <div class="lesson"><b>절차 제공 → 기억 의존 → 주의분산 → 작업조건 변화 → 작업중단 → 다른 업무 → 작업복귀</b><h2>달라진 것은 작업환경이었습니다.</h2></div>
   <button id="seeResult" class="primary">나의 결과 확인</button>
 </section>
 <section id="final" class="card hidden">
-  <div class="center"><img class="stage-cat" src="./he2-result.png" alt="최종 결과 고양이"><h1>FINAL REPORT</h1></div>
+  <div class="center"><img class="stage-cat" src="./cat-result.png" alt="최종 결과 고양이"><h1>FINAL REPORT</h1></div>
   <div id="finalRank" class="list"></div>
   <h2>📊 전체 참여자 오류율</h2><div id="errorStats" class="analysis"></div>
   <div class="lesson center">
@@ -308,7 +337,7 @@ let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.
 const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
 const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));$(id)?.classList.remove("hidden")};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.go)show(b.dataset.go);if(b.dataset.stage)startAdminStage(+b.dataset.stage);if(b.dataset.result)setStatus(`stage${b.dataset.result}Result`)});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.go)show(b.dataset.go);if(b.dataset.readyStage)readyAdminStage(+b.dataset.readyStage);if(b.dataset.stage)startAdminStage(+b.dataset.stage);if(b.dataset.result)setStatus(`stage${b.dataset.result}Result`)});
 $("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onclick=()=>setStatus("final");$("resetBtn").onclick=resetGame;$("kickBtn").onclick=kickAll;
 
 async function joinGame(){
@@ -317,7 +346,7 @@ async function joinGame(){
  try{localStorage.he2_name=name;localStorage.he2_room=roomId;await set(rr(`participants/${pid}`),{name,joinedAt:Date.now()});$("roomLabel").textContent=roomId;listenParticipant();showReady()}
  catch(e){$("joinMsg").textContent="접속 실패: "+e.message}
 }
-function showReady(){clearInterval(timer);clearTimeout(popupTimer);$("readyText").textContent="READY!";$("waitingTitle").textContent="참가 완료!";$("waitingMsg").textContent="교수자의 게임 시작을 기다려주세요.";$("brainWait").src="./he2-ready.png";show("waiting")}
+function showReady(){clearInterval(timer);clearTimeout(popupTimer);$("readyText").textContent="READY!";$("waitingTitle").textContent="참가 완료!";$("waitingMsg").textContent="교수자의 게임 시작을 기다려주세요.";$("brainWait").src="./cat-ready.png";show("waiting")}
 function listenParticipant(){
  onValue(rr("participants"),s=>{$("count").textContent=Object.keys(s.val()||{}).length;if(!s.child(pid).exists()){localStorage.removeItem("he2_room");show("home")}});
  onValue(rr("game"),s=>{if(!s.exists())return;const g=s.val()||{};
@@ -340,6 +369,22 @@ async function resetGame(){if(!confirm("참가자와 모든 결과를 삭제하�
 async function kickAll(){if(!confirm("모든 참가자를 퇴장시킬까요?"))return;await remove(rr("participants"));await update(rr("game"),{status:"kicked"});}
 
 let briefingTimer=null,overloadTimer=null;
+function showStageReady(s){
+  stage=s;ended=true;clearInterval(timer);clearTimeout(popupTimer);
+  const briefings={
+    1:{title:"절차에 따라 작업하세요",body:'화면 상단의 <b>작업방법과 NEXT 안내</b>를 확인하면서 정확한 순서로 숫자를 선택하세요.<span class="method">1 → 10 순서로 클릭</span>',img:"./cat-stage1.png"},
+    2:{title:"이제 NEXT 안내가 제공되지 않습니다",body:'화면 상단의 <b>작업방법을 확인하고 기억하여</b> 작업을 수행하세요.<br>작업방법은 작업 중 변경될 수 있습니다.',img:"./cat-stage2.png"},
+    3:{title:"마지막 작업입니다",body:'작업환경이 변하더라도 <b>현재 작업조건과 작업위치를 정확하게 유지</b>하세요.<br>중간에 나타나는 문제를 해결한 후 원래 작업으로 복귀하세요.',img:"./cat-stage3.png"}
+  };
+  const b=briefings[s];
+  $("briefKicker").textContent="STAGE "+s;
+  $("briefTitle").textContent=b.title;
+  $("briefBody").innerHTML=b.body+'<p class="small"><b>교수자의 시작을 기다려주세요.</b></p>';
+  const m=$("briefMascot");
+  m.outerHTML=`<img id="briefMascot" class="stage-cat" src="${b.img}" alt="단계 ${s} 고양이">`;
+  $("briefReady").style.display="none";
+  show("stageBrief");
+}
 function prepareStage(s,st,d){
   if(startKey===st)return;
   startKey=st;stage=s;duration=d;ended=false;
@@ -380,7 +425,7 @@ function beginStage(s,st,d){
  $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
 $("instruction").textContent=s===1?"절차 제공: NEXT 숫자를 따라 작업하세요.":"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다.";
 $("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;setRound();
- if(s>=2)scheduleDistraction();if(s===3)scheduleOverload();
+ if(s===2)scheduleDistraction();if(s===3)scheduleOverload();
  const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
 }
 function currentCondition(){return stage===1?CONDITIONS[0]:CONDITIONS[roundIndex%CONDITIONS.length]}
@@ -445,7 +490,8 @@ function showConfirmPopup(title,text,onClose){
  const board=$("gameboard");
  if(board.querySelector(".game-overlay")){onClose?.();return}
  const ov=document.createElement("div");ov.className="game-overlay";
- ov.innerHTML=`<div class="popup-card"><h3>${title}</h3><p>${text}</p><button class="primary">확인</button></div>`;
+ const pic=title.includes("동료")?"cat-talk.png":title.includes("페이지폰")?"cat-broadcast.png":title.includes("업무전화")?"cat-phone.png":"cat-work.png";
+ ov.innerHTML=`<div class="popup-card"><img class="popup-cat" src="./${pic}" alt=""><h3>${title}</h3><p>${text}</p><button class="primary">확인</button></div>`;
  ov.querySelector("button").onclick=()=>{ov.remove();onClose?.()};
  board.appendChild(ov);
 }
@@ -464,24 +510,28 @@ function showMathQuiz(){
  const board=$("gameboard");if(board.querySelector(".game-overlay"))return;
  quizOpen=true;lastInterruption=Date.now();
  const z=makeMathQuiz(),ov=document.createElement("div");ov.className="game-overlay";
- ov.innerHTML=`<div class="quiz-card"><h3>🧩 집중력 퀴즈!</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">정답을 선택한 후 원래 작업으로 복귀하세요.</p></div>`;
+ ov.innerHTML=`<div class="quiz-card"><img class="quiz-cat" src="./cat-quiz.png" alt=""><h3>🧩 집중력 퀴즈!</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">정답을 선택한 후 원래 작업으로 복귀하세요.</p></div>`;
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
    if(!ok){wrong++;auxiliaryErrors++;score-=30;$("score").textContent=score}
    ov.remove();quizOpen=false;
+   showQuizFeedback(ok);
    flashFeedback(ok?"퀴즈 완료 · 원래 작업으로 복귀하세요.":"퀴즈 오답 · 원래 작업위치를 다시 확인하세요.");
  });
  board.appendChild(ov);
 }
+function showQuizFeedback(ok){
+ const board=$("gameboard");
+ const d=document.createElement("div");d.className="quiz-feedback";
+ d.innerHTML=`<img src="./${ok?"cat-correct.png":"cat-wrong.png"}" alt=""><b>${ok?"정답!":"오답!"}</b>`;
+ board.appendChild(d);setTimeout(()=>d.remove(),900);
+}
 function scheduleOverload(){
  clearInterval(overloadTimer);
- let ticks=0;
  overloadTimer=setInterval(()=>{
    if(ended){clearInterval(overloadTimer);return}
-   ticks++;
-   if(ticks%2===1)showMathQuiz();
-   else{lastCondition=Date.now();flashNotice("🔄 작업조건을 다시 확인하세요",1600);addSticker()}
- },6500);
+   if(!quizOpen)showMathQuiz();
+ },5000);
 }
 function flashNotice(text,ms=1300){const board=$("gameboard"),d=document.createElement("div");d.className="toast";d.textContent=text;board.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function addSticker(){const board=$("gameboard"),d=document.createElement("span");d.className="sticker";d.textContent=["⭐","⚡","❗","💥","🔔"][Math.floor(Math.random()*5)];d.style.left=Math.random()*85+"%";d.style.top=15+Math.random()*70+"%";board.appendChild(d);setTimeout(()=>d.remove(),2400)}
