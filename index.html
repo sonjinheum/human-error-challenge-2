@@ -288,14 +288,14 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 </section>
 
 <section id="finalMessage" class="card center hidden">
-  <img class="stage-cat" src="./cat-result.png" alt="안전 메시지 고양이">
+  <img class="stage-cat" src="./cat-final.png" alt="안전 메시지 고양이">
   <h1>게임이 어려워진 이유는 무엇이었을까요?</h1>
   <h2>당신의 능력이 갑자기 떨어진 것이 아닙니다.</h2>
   <div class="lesson"><b>절차 제공 → 기억 의존 → 주의분산 → 작업조건 변화 → 작업중단 → 다른 업무 → 작업복귀</b><h2>달라진 것은 작업환경이었습니다.</h2></div>
   <button id="seeResult" class="primary">나의 결과 확인</button>
 </section>
 <section id="final" class="card hidden">
-  <div class="center"><img class="stage-cat" src="./cat-result.png" alt="최종 결과 고양이"><h1>FINAL REPORT</h1></div>
+  <div class="center"><img class="stage-cat" src="./cat-final.png" alt="최종 결과 고양이"><h1>FINAL REPORT</h1></div>
   <div id="finalRank" class="list"></div>
   <h2>📊 전체 참여자 오류율</h2><div id="errorStats" class="analysis"></div>
   <div class="lesson center">
@@ -350,7 +350,8 @@ function showReady(){clearInterval(timer);clearTimeout(popupTimer);$("readyText"
 function listenParticipant(){
  onValue(rr("participants"),s=>{$("count").textContent=Object.keys(s.val()||{}).length;if(!s.child(pid).exists()){localStorage.removeItem("he2_room");show("home")}});
  onValue(rr("game"),s=>{if(!s.exists())return;const g=s.val()||{};
-   if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
+   if(/^stage[123]Ready$/.test(g.status))showStageReady(+g.currentStage);
+   else if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
    else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
    else if(g.status==="final")show("finalMessage");
    else if(g.status==="waiting")showReady();
@@ -360,10 +361,27 @@ function listenParticipant(){
 function adminLogin(){if($("pw").value!==SETTINGS.ADMIN_PASSWORD){alert("비밀번호가 올바르지 않습니다.");return}roomId=$("adminRoom").value.trim().toUpperCase();if(!roomId)return alert("ROOM CODE를 입력하세요.");duration=+$("duration").value||30;show("admin");listenAdmin()}
 function listenAdmin(){
  onValue(rr("participants"),s=>{const a=Object.values(s.val()||{});$("adminCount").textContent=a.length;$("people").innerHTML=a.length?a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}</span><strong>READY</strong></div>`).join(""):'<div class="msg">아직 참가자가 없습니다.</div>'});
- onValue(rr("game"),s=>{$("adminStatus").textContent=s.exists()?`현재 상태: ${s.val().status}`:"대기 중";renderAdmin()});
+ onValue(rr("game"),s=>{
+  if(!s.exists()){$("adminStatus").textContent="대기 중";return}
+  const g=s.val();
+  const labels={
+    stage1Ready:"1단계 준비 완료 · 시작 대기",stage1:"1단계 진행 중",stage1Result:"1단계 결과 공개",
+    stage2Ready:"2단계 준비 완료 · 시작 대기",stage2:"2단계 진행 중",stage2Result:"2단계 결과 공개",
+    stage3Ready:"3단계 준비 완료 · 시작 대기",stage3:"3단계 진행 중",stage3Result:"3단계 결과 공개",
+    final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
+  };
+  $("adminStatus").textContent=labels[g.status]||`현재 상태: ${g.status}`;
+  renderAdmin();
+});
  onValue(rr("results"),renderAdmin);
 }
-async function startAdminStage(s){const st=Date.now()+6500;await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration});}
+async function readyAdminStage(s){
+  await set(rr("game"),{status:`stage${s}Ready`,currentStage:s,startTime:0,duration});
+}
+async function startAdminStage(s){
+  const st=Date.now()+3500;
+  await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration});
+}
 async function setStatus(status){let s=+(status.match(/[123]/)||[stage||1])[0];await update(rr("game"),{status,currentStage:status==="final"?3:s});}
 async function resetGame(){if(!confirm("참가자와 모든 결과를 삭제하고 초기화할까요?"))return;await remove(rr());await set(rr("game"),{status:"waiting",currentStage:0,startTime:0});}
 async function kickAll(){if(!confirm("모든 참가자를 퇴장시킬까요?"))return;await remove(rr("participants"));await update(rr("game"),{status:"kicked"});}
@@ -387,37 +405,28 @@ function showStageReady(s){
 }
 function prepareStage(s,st,d){
   if(startKey===st)return;
-  startKey=st;stage=s;duration=d;ended=false;
-  clearInterval(timer);clearTimeout(briefingTimer);
-  const briefings={
-    1:{title:"절차에 따라 작업하세요",body:'화면 상단의 <b>작업방법과 NEXT 안내</b>를 확인하고 정확한 순서로 숫자를 선택하세요.<span class="method">1 → 10 순서로 클릭</span>'},
-    2:{title:"이제 NEXT 안내가 제공되지 않습니다",body:'상단의 <b>작업방법을 확인하고 기억</b>하여 수행하세요.<br>작업방법은 작업 중 변경될 수 있습니다.'},
-    3:{title:"마지막 작업입니다",body:'작업환경이 변하더라도 <b>현재 작업조건과 작업위치</b>를 유지하세요.<br>화면에 나타나는 지시에 따라 행동하세요.'}
+  startKey=st;stage=s;duration=d||30;ended=false;
+  clearInterval(timer);clearTimeout(briefingTimer);clearTimeout(popupTimer);clearInterval(overloadTimer);
+
+  $("stageIntro").textContent="STAGE "+s;
+  $("countdownMsg").textContent=s===1
+    ?"절차와 NEXT를 확인하세요!"
+    :s===2
+      ?"작업방법을 기억하세요!"
+      :"문제 해결 후 작업위치를 기억하세요!";
+  show("countdownScreen");
+
+  const tick=()=>{
+    if(ended||startKey!==st){clearInterval(timer);return}
+    const left=st-Date.now();
+    $("countdown").textContent=left>2500?"3":left>1500?"2":left>500?"1":"GO!";
+    if(left<=0){
+      clearInterval(timer);
+      beginStage(s,st,d||30);
+    }
   };
-  const b=briefings[s];
-  $("briefKicker").textContent="STAGE "+s;
-  $("briefTitle").textContent=b.title;
-  $("briefBody").innerHTML=b.body;
-  $("briefMascot").src="./he2-stage"+s+".png";
-  $("briefReady").textContent="교수자의 시작을 기다려주세요";
-  $("briefReady").disabled=true;
-  show("stageBrief");
-  const countdownAt=st-3500;
-  const showCountdown=()=>{
-    if(ended||startKey!==st)return;
-    if(Date.now()<countdownAt){briefingTimer=setTimeout(showCountdown,100);return}
-    $("stageIntro").textContent="STAGE "+s;
-    $("countdownMsg").textContent="집중하세요!";
-    show("countdownScreen");
-    const tick=()=>{
-      if(ended||startKey!==st){clearInterval(timer);return}
-      const left=st-Date.now();
-      $("countdown").textContent=left>2500?"3":left>1500?"2":left>500?"1":"GO!";
-      if(left<=0){clearInterval(timer);beginStage(s,st,d)}
-    };
-    tick();timer=setInterval(tick,100);
-  };
-  showCountdown();
+  tick();
+  timer=setInterval(tick,100);
 }
 
 function beginStage(s,st,d){
@@ -538,13 +547,24 @@ function addSticker(){const board=$("gameboard"),d=document.createElement("span"
 async function finishStage(){
  if(ended)return;ended=true;clearInterval(timer);clearTimeout(popupTimer);clearInterval(overloadTimer);
  const attempts=correct+wrong,errorRate=attempts?wrong/attempts*100:0,key=`he2_${roomId}_${stage}_${startKey}`;
- if(!localStorage.getItem(key)){await set(rr(`results/stage${stage}/${pid}`),{pid,name,score,correct,wrong,attempts,errorRate,distractionErrors,interruptionErrors,conditionErrors,auxiliaryErrors,submittedAt:serverTimestamp(),startTime:startKey});localStorage.setItem(key,"1")}
- showResults(stage);
+ if(!localStorage.getItem(key)){
+   await set(rr(`results/stage${stage}/${pid}`),{
+     pid,name,score,correct,wrong,attempts,errorRate,
+     distractionErrors,interruptionErrors,conditionErrors,auxiliaryErrors,
+     submittedAt:serverTimestamp(),startTime:startKey
+   });
+   localStorage.setItem(key,"1");
+ }
+ $("brainWait").src="./cat-result.png";
+ $("readyText").textContent="FINISH!";
+ $("waitingTitle").textContent=`STAGE ${stage} 종료`;
+ $("waitingMsg").textContent="교수자의 결과 공개를 기다려주세요.";
+ show("waiting");
 }
 async function getStage(s){const x=await get(rr(`results/stage${s}`));return Object.entries(x.val()||{}).map(([id,v])=>({...v,pid:v.pid||id}))}
 function rankRows(a){return a.map((x,i)=>`<div class="row"><b>${i+1}</b><span>${esc(x.name)}<div class="small">정답 ${x.correct||0} · 오답 ${x.wrong||0} · 오류율 ${(x.errorRate||0).toFixed(1)}%</div></span><strong>${x.score||0}점</strong></div>`).join("")||'<div class="msg">아직 결과가 없습니다.</div>'}
 async function showResults(s){
- stage=s;const a=await getStage(s);a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);$("resultTitle").textContent=`STAGE ${s} RANKING`;$("resultBrain").src="./he2-"+(s===1?"stage1":s===2?"stage2":"stage3")+".png";$("resultRank").innerHTML=rankRows(a);
+ stage=s;const a=await getStage(s);a.sort((x,y)=>y.score-x.score||y.correct-x.correct||x.wrong-y.wrong);$("resultTitle").textContent=`STAGE ${s} RANKING`;$("resultBrain").src="./cat-result.png";$("resultRank").innerHTML=rankRows(a);
  $("myAnalysis").innerHTML="";show("result");
 }
 async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
