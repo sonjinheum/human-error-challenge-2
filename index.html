@@ -308,7 +308,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V17 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V19 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
   <h3>📡 실시간 진행현황</h3>
   <div id="liveSummary" class="admin-metrics"></div>
   <div id="people" class="list"></div>
@@ -320,14 +320,14 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
 
   <div class="final-admin-box">
     <h3>🎤 최종 운영</h3>
-    <button id="previewFinalBtn" class="good">관리자 최종집계 확인</button>
+    <button id="previewFinalBtn" class="good">최종결과 확인·공개</button>
     <div id="adminFinalPreview"></div>
     <label class="small" for="finalMessageInput"><b>교육생에게 보여줄 최종 멘트</b></label>
     <textarea id="finalMessageInput">100번의 정확한 수행도 중요하지만, 단 한 번의 오류가 안전에 영향을 줄 수 있습니다.
-개인의 집중력에만 의존하지 않고 절차, 자기확인, 작업위치 표시, 동료확인과 같은 인적오류예방기법을 활용해야 합니다.</textarea>
+개인의 집중력에만 의존하지 않고 절차서 준수, 자기진단, 의사소통재확인기법, 동시확인과 같은 인적오류예방기법을 현장에서 활용해야 합니다.</textarea>
     <div>
-      <button id="sendFinalMessageBtn" class="warn">① 최종 멘트 전송</button>
-      <button id="finalBtn" class="primary">② 최종 결과 공개</button>
+      <button id="sendFinalMessageBtn" class="warn">최종 멘트 띄우기</button>
+      <button id="finalBtn" class="primary">최종결과 화면 다시 띄우기</button>
     </div>
   </div>
 </section>
@@ -430,7 +430,7 @@ function listenParticipant(){
    else if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
    else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
    else if(g.status==="finalMessage")showFinalMessage(false);
-   else if(g.status==="final")showFinalMessage(true);
+   else if(g.status==="final")showFinal();
    else if(g.status==="waiting")showReady();
    else if(g.status==="kicked")show("home");
  });
@@ -450,7 +450,7 @@ function listenAdmin(){
     stage1Ready:"1단계 준비화면 표시 중 · 시작 대기",stage1:"1단계 카운트/진행 중",stage1Result:"1단계 결과 공개",
     stage2Ready:"2단계 준비화면 표시 중 · 시작 대기",stage2:"2단계 카운트/진행 중",stage2Result:"2단계 결과 공개",
     stage3Ready:"3단계 준비화면 표시 중 · 시작 대기",stage3:"3단계 카운트/진행 중",stage3Result:"3단계 결과 공개",
-    finalMessage:"최종 멘트 표시 중",final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
+    finalMessage:"최종 멘트 표시 중",final:"최종 결과 표시 중",waiting:"대기 중",kicked:"전체 퇴장"
   };
   $("adminStatus").textContent=labels[g.status]||`현재 상태: ${g.status}`;
   renderAdmin();
@@ -513,7 +513,7 @@ function showStageReady(s){
   const briefings={
     1:{
       title:"절차와 가이드에 따라 작업하세요",
-      body:'화면 상단의 <b>작업방법</b>을 확인하고, 화면에 표시되는 <b>NEXT 안내와 강조 숫자</b>를 따라 정확하게 수행하세요.<br><b>작업방법은 라운드마다 변경될 수 있습니다.</b><br><b>연속 정답: 10점 → 11점 → 12점… / 오답 시 콤보 초기화</b><span class="method">작업방법 확인 → NEXT 확인 → 정확하게 클릭</span>',
+      body:'화면 상단의 <b>작업방법</b>을 확인하고, 화면에 표시되는 <b>NEXT 안내와 강조 숫자</b>를 따라 정확하게 수행하세요.<br><b>작업방법은 라운드마다 변경될 수 있습니다.</b><br><b>연속 정답: 10점 → 11점 → 12점… → 최대 20점 / 오답 시 콤보 초기화</b><span class="method">작업방법 확인 → NEXT 확인 → 정확하게 클릭</span>',
       img:"./cat-stage1.png"
     },
     2:{
@@ -606,7 +606,7 @@ function pick(n){
  const c=currentCondition(),expected=c.seq[roundPos];
  if(n===expected){
    correct++;
-   const gain=10+combo;
+   const gain=10+Math.min(combo,10);
    score+=gain;
    combo++;
    $("combo").textContent=combo;
@@ -711,7 +711,7 @@ function showMathQuiz(){
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
    if(ok){
-     const gain=10+combo;
+     const gain=10+Math.min(combo,10);
      score+=gain;
      combo++;
      $("combo").textContent=combo;
@@ -788,6 +788,7 @@ async function previewAdminFinal(){
  const a=await buildFinal(),stats=await errorStats();
  const overallC=a.reduce((z,x)=>z+(+x.correct||0),0),overallW=a.reduce((z,x)=>z+(+x.wrong||0),0),overall=overallC+overallW?overallW/(overallC+overallW)*100:0;
  $("adminFinalPreview").innerHTML=`<div class="msg"><b>최종 참가자 ${a.length}명 · 전체 오답률 ${overall.toFixed(1)}%</b><br><span class="small">${stats.map(x=>`STAGE ${x.s} ${x.rate.toFixed(1)}%`).join(" · ")}</span></div>`+rankRows(a.map(x=>({...x,errorRate:x.correct+x.wrong?x.wrong/(x.correct+x.wrong)*100:0})));
+ await update(rr("game"),{status:"final",currentStage:3,commandId:Date.now()});
 }
 async function sendFinalMessage(){
  const text=$("finalMessageInput").value.trim();
@@ -798,12 +799,12 @@ async function sendFinalMessage(){
 async function releaseFinalResults(){
  await update(rr("game"),{status:"final",currentStage:3,commandId:Date.now()});
 }
-async function showFinalMessage(canSeeResult){
+async function showFinalMessage(){
  let text="교수자의 최종 메시지를 기다려주세요.";
  try{const s=await get(rr("finalMessage"));if(s.exists()&&s.val().text)text=s.val().text}catch(e){}
  $("professorMessage").textContent=text;
- $("seeResult").style.display=canSeeResult?"inline-block":"none";
- updateMyProgress({phase:canSeeResult?"final":"finalMessage",currentStage:3,condition:canSeeResult?"최종결과 공개":"최종멘트 확인"});
+ $("seeResult").style.display="none";
+ updateMyProgress({phase:"finalMessage",currentStage:3,condition:"최종멘트 확인"});
  show("finalMessage");
 }
 async function buildFinal(){const all={};for(let s=1;s<=3;s++)for(const x of await getStage(s)){const id=x.pid;all[id]??={name:x.name,score:0,correct:0,wrong:0};all[id].score+=+x.score||0;all[id].correct+=+x.correct||0;all[id].wrong+=+x.wrong||0}return Object.values(all).sort((a,b)=>b.score-a.score||b.correct-a.correct||a.wrong-b.wrong)}
