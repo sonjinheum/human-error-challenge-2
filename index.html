@@ -296,7 +296,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V14 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V16 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
   <h3>📡 실시간 진행현황</h3>
   <div id="liveSummary" class="admin-metrics"></div>
   <div id="people" class="list"></div>
@@ -562,7 +562,7 @@ function prepareStage(s,st,d){
 function beginStage(s,st,d){
  stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
  $("stageNo").textContent=s;$("score").textContent=0;$("nextNo").textContent=s===1?1:"—";
-$("instruction").textContent=s===1?"절차 제공: 작업방법을 확인하고 NEXT 안내를 따라 작업하세요.":"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다.";
+$("instruction").textContent=s===1?"절차 제공: 작업방법을 확인하고 NEXT 안내를 따라 작업하세요.":s===2?"작업조건을 기억하고 수행하세요. NEXT 가이드는 제공되지 않습니다. · 오답 -20점":"작업조건을 기억하고 수행하세요. 긴급작업 처리 오류 및 작업 오답 -50점";
 $("bar").style.width="0%";show("game");roundIndex=0;roundPos=0;updateMyProgress({phase:"playing",currentStage:s,score:0,correct:0,wrong:0,roundIndex:0,roundPos:0,condition:"시작"});setRound();
  if(s===2)scheduleDistraction();if(s===3)scheduleOverload();
  const tick=()=>{const left=Math.max(0,Math.ceil((st+d*1000-Date.now())/1000));$("time").textContent=left;if(left<=0)finishStage()};tick();clearInterval(timer);timer=setInterval(tick,150);
@@ -596,7 +596,7 @@ function pick(n){
    if(roundPos>=c.seq.length){roundIndex++;setRound()}
    else{if(stage===1)$("nextNo").textContent=c.seq[roundPos];markTarget()}
  }else{
-   wrong++;score-=stage===1?0:stage===2?10:30;
+   wrong++;score-=stage===1?0:stage===2?20:50;
    const now=Date.now();if(now-lastDistraction<3000)distractionErrors++;
    if(now-lastInterruption<4500)interruptionErrors++;conditionErrors++;
    flashFeedback(c.seq.slice(0,roundPos).includes(n)?"이미 완료한 작업입니다.":"작업순서를 다시 확인하세요.");
@@ -637,14 +637,41 @@ function showConfirmPopup(title,text,onClose){
  board.appendChild(ov);
 }
 function makeMathQuiz(){
- const type=Math.floor(Math.random()*3);let a,b,answer,q;
- if(type===0){a=10+Math.floor(Math.random()*80);b=10+Math.floor(Math.random()*80);answer=a+b;q=`${a} + ${b} = ?`}
- else if(type===1){a=20+Math.floor(Math.random()*70);b=10+Math.floor(Math.random()*(a-10));answer=a-b;q=`${a} − ${b} = ?`}
- else{a=2+Math.floor(Math.random()*8);b=2+Math.floor(Math.random()*8);answer=a*b;q=`${a} × ${b} = ?`}
- const opts=new Set([answer]);
- const deltas=[-3,-2,-1,1,2,3,4,-4];
- while(opts.size<4){const d=deltas[Math.floor(Math.random()*deltas.length)];if(answer+d>=0)opts.add(answer+d)}
- return {q,answer,options:[...opts].sort(()=>Math.random()-.5)};
+  const type=Math.floor(Math.random()*3);
+  let a,b,answer,q;
+
+  // 긴급작업 요청은 계산 난이도보다 "작업중단 후 복귀" 체험이 핵심이므로
+  // 빠르게 풀 수 있는 수준으로 제한한다.
+  if(type===0){
+    // 두 자리 수 + 한 자리 수
+    a=10+Math.floor(Math.random()*80);   // 10~89
+    b=2+Math.floor(Math.random()*8);     // 2~9
+    answer=a+b;
+    q=`${a} + ${b} = ?`;
+  }else if(type===1){
+    // 두 자리 수 - 한 자리 수 (항상 양수)
+    a=20+Math.floor(Math.random()*70);   // 20~89
+    b=2+Math.floor(Math.random()*8);     // 2~9
+    answer=a-b;
+    q=`${a} − ${b} = ?`;
+  }else{
+    // 한 자리 수 × 한 자리 수
+    a=2+Math.floor(Math.random()*8);     // 2~9
+    b=2+Math.floor(Math.random()*8);     // 2~9
+    answer=a*b;
+    q=`${a} × ${b} = ?`;
+  }
+
+  // 정답 주변의 그럴듯한 오답 3개 생성
+  const candidates=[-3,-2,-1,1,2,3,4,-4];
+  const opts=new Set([answer]);
+  while(opts.size<4){
+    const d=candidates[Math.floor(Math.random()*candidates.length)];
+    const v=answer+d;
+    if(v>=0)opts.add(v);
+  }
+
+  return {q,answer,options:[...opts].sort(()=>Math.random()-.5)};
 }
 function showMathQuiz(){
  if(ended||stage!==3||quizOpen)return;
@@ -654,7 +681,7 @@ function showMathQuiz(){
  ov.innerHTML=`<div class="quiz-card"><img class="quiz-cat" src="./cat-quiz.png" alt=""><h3>🚨 긴급작업 요청</h3><div class="quiz-question">${z.q}</div><div class="quiz-options">${z.options.map(v=>`<button data-a="${v}">${v}</button>`).join("")}</div><p class="small">긴급 요청을 처리한 후 원래 작업으로 복귀하세요.</p></div>`;
  ov.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
    const ok=+b.dataset.a===z.answer;
-   if(!ok){wrong++;auxiliaryErrors++;score-=30;$("score").textContent=score}
+   if(!ok){wrong++;auxiliaryErrors++;score-=50;$("score").textContent=score}
    updateMyProgress({phase:"playing",currentStage:stage,score,correct,wrong,roundIndex,roundPos,condition:currentCondition().label});
    ov.remove();quizOpen=false;
    showQuizFeedback(ok);
