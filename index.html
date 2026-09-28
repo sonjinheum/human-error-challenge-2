@@ -387,9 +387,9 @@ function listenAdmin(){
   if(!s.exists()){$("adminStatus").textContent="대기 중";return}
   const g=s.val();
   const labels={
-    stage1Ready:"1단계 준비화면 표시 중 · 시작 대기",stage1:"1단계 진행 중",stage1Result:"1단계 결과 공개",
-    stage2Ready:"2단계 준비화면 표시 중 · 시작 대기",stage2:"2단계 진행 중",stage2Result:"2단계 결과 공개",
-    stage3Ready:"3단계 준비화면 표시 중 · 시작 대기",stage3:"3단계 진행 중",stage3Result:"3단계 결과 공개",
+    stage1Ready:"1단계 준비화면 표시 중 · 시작 대기",stage1:"1단계 카운트/진행 중",stage1Result:"1단계 결과 공개",
+    stage2Ready:"2단계 준비화면 표시 중 · 시작 대기",stage2:"2단계 카운트/진행 중",stage2Result:"2단계 결과 공개",
+    stage3Ready:"3단계 준비화면 표시 중 · 시작 대기",stage3:"3단계 카운트/진행 중",stage3Result:"3단계 결과 공개",
     final:"최종 결과 공개",waiting:"대기 중",kicked:"전체 퇴장"
   };
   $("adminStatus").textContent=labels[g.status]||`현재 상태: ${g.status}`;
@@ -403,7 +403,7 @@ async function readyAdminStage(s){
 }
 async function startAdminStage(s){
   const commandId=Date.now();
-  const st=Date.now()+3500;
+  const st=Date.now();
   await set(rr("game"),{status:`stage${s}`,currentStage:s,startTime:st,duration,commandId});
 }
 async function setStatus(status){
@@ -464,17 +464,21 @@ function prepareStage(s,st,d){
       :"긴급작업 처리 후 원래 작업으로 복귀하세요!";
   show("countdownScreen");
 
-  const tick=()=>{
+  const seq=["3","2","1","GO!"];
+  let i=0;
+  $("countdown").textContent=seq[i];
+
+  clearInterval(timer);
+  timer=setInterval(()=>{
     if(ended||startKey!==st){clearInterval(timer);return}
-    const left=st-Date.now();
-    $("countdown").textContent=left>2500?"3":left>1500?"2":left>500?"1":"GO!";
-    if(left<=0){
-      clearInterval(timer);
-      beginStage(s,st,d||30);
+    i++;
+    if(i<seq.length){
+      $("countdown").textContent=seq[i];
+      return;
     }
-  };
-  tick();
-  timer=setInterval(tick,100);
+    clearInterval(timer);
+    beginStage(s,Date.now(),d||30);
+  },700);
 }
 function beginStage(s,st,d){
  stage=s;score=correct=wrong=0;next=1;distractionErrors=interruptionErrors=conditionErrors=auxiliaryErrors=0;lastDistraction=lastInterruption=lastCondition=0;ended=false;
