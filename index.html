@@ -210,6 +210,136 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  .progress-card{grid-template-columns:1fr 1fr}.progress-card .wide{grid-column:1/-1}
 }
 
+
+/* V20 mobile start + join usability */
+@media(max-width:650px){
+  /* Keep the approved mobile artwork and core-value area intact.
+     This panel only masks the old baked-in buttons and replaces them with real HTML buttons. */
+  .home-actions{
+    left:7.5%!important;
+    top:60.6%!important;
+    width:85%!important;
+    height:14.8%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:12px!important;
+    padding:7px 9px!important;
+    border-radius:26px!important;
+    background:linear-gradient(180deg,rgba(229,250,207,.98),rgba(210,241,181,.98))!important;
+    box-shadow:0 5px 14px rgba(32,76,31,.18)!important;
+  }
+  .home-actions button{
+    position:relative!important;
+    opacity:1!important;
+    color:var(--ink)!important;
+    font-size:18px!important;
+    font-weight:1000!important;
+    border:3px solid var(--ink)!important;
+    box-shadow:3px 4px 0 var(--ink)!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+  }
+  .home-actions .hero-play{
+    width:100%!important;
+    height:58px!important;
+    min-height:58px!important;
+    border-radius:22px!important;
+    background:linear-gradient(#29cf65,#08a947)!important;
+    color:white!important;
+    font-size:26px!important;
+    letter-spacing:-1px!important;
+  }
+  .home-actions .hero-play::before{
+    content:"▶";
+    display:inline-block;
+    margin-right:10px;
+    font-size:22px;
+  }
+  .home-actions .hero-admin{
+    width:58%!important;
+    height:42px!important;
+    min-height:42px!important;
+    border-radius:18px!important;
+    background:linear-gradient(#fff,#eef0f5)!important;
+    color:#55586b!important;
+    font-size:16px!important;
+    box-shadow:2px 3px 0 var(--ink)!important;
+  }
+  .home-actions .hero-admin::before{
+    content:"⚙";
+    display:inline-block;
+    margin-right:7px;
+  }
+
+  .join-card{
+    max-width:430px;
+    margin:0 auto;
+    padding:20px 16px 18px!important;
+    background:linear-gradient(180deg,#fffdf8,#fff8e8);
+  }
+  .join-head{text-align:center;margin-bottom:16px}
+  .join-head .join-icon{
+    width:58px;height:58px;margin:0 auto 8px;
+    display:grid;place-items:center;
+    border:3px solid var(--ink);border-radius:18px;
+    background:var(--mint);font-size:30px;box-shadow:3px 4px 0 var(--ink);
+  }
+  .join-head h2{font-size:28px;margin:5px 0 6px}
+  .join-head p{margin:0;color:#5f596d;font-size:14px;line-height:1.5}
+
+  .join-field{
+    margin:15px 0;
+    padding:14px;
+    border:2px solid #ddd5c5;
+    border-radius:18px;
+    background:white;
+  }
+  .join-field label{
+    display:flex;align-items:center;gap:8px;
+    font-size:19px;margin-bottom:5px;color:var(--ink);
+  }
+  .join-field .field-icon{
+    width:34px;height:34px;display:grid;place-items:center;
+    border-radius:10px;background:#e7f7ee;color:#079447;font-weight:1000;
+  }
+  .join-field p{
+    margin:2px 0 8px 42px;
+    color:#625d6e;font-size:13px;line-height:1.45;
+  }
+  .join-field p span{color:#8a8494}
+  .join-field input{
+    margin:4px 0 0;
+    min-height:54px;
+    border-color:#75cfa9;
+    box-shadow:inset 0 0 0 1px #eaf8f2;
+  }
+  .join-main-btn{
+    width:100%;
+    margin:8px 0 10px!important;
+    min-height:58px!important;
+    border-radius:20px!important;
+    background:linear-gradient(#28ca65,#08a846)!important;
+    color:white!important;
+    font-size:22px!important;
+  }
+  .join-back-btn{
+    width:100%;
+    margin:0!important;
+    min-height:50px!important;
+    background:linear-gradient(#fff,#eff0f5)!important;
+    color:#5b5e70!important;
+  }
+  .join-msg{
+    margin-top:10px;
+    text-align:center;
+    color:#d64758;
+    font-weight:800;
+  }
+}
+
+/* V17/V19 combo score feedback */
 .score-gain{
  position:absolute;right:16px;top:16px;z-index:95;
  font-size:32px;font-weight:1000;background:var(--mint);
@@ -222,6 +352,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
  35%{transform:translateY(0) scale(1.08);opacity:1}
  100%{transform:translateY(-22px) scale(1);opacity:0}
 }
+
 </style>
 </head>
 <body>
@@ -237,13 +368,28 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   </div>
 </section>
 
-<section id="join" class="card hidden">
-  <h2>🎟️ 게임 참가</h2>
-  <input id="name" maxlength="16" placeholder="이름 또는 닉네임" autocomplete="off">
-  <input id="room" maxlength="8" placeholder="ROOM CODE" value="2050" inputmode="numeric">
-  <button id="joinBtn" class="primary">참가하기</button>
-  <button data-go="home">뒤로</button>
-  <div id="joinMsg" class="small"></div>
+<section id="join" class="card join-card hidden">
+  <div class="join-head">
+    <div class="join-icon">🎮</div>
+    <h2>게임 참가하기</h2>
+    <p>이름과 방번호를 입력한 후 참가하기를 눌러주세요.</p>
+  </div>
+
+  <div class="join-field">
+    <label for="name"><span class="field-icon">👤</span><b>참가자 이름(아이디)</b></label>
+    <p>게임 결과표에 표시될 이름을 입력하세요.<br><span>예: 홍길동, 1조-김철수</span></p>
+    <input id="name" maxlength="16" placeholder="예: 홍길동 또는 1조-김철수" autocomplete="off">
+  </div>
+
+  <div class="join-field">
+    <label for="room"><span class="field-icon">#</span><b>방번호 (Room Code)</b></label>
+    <p>교수자가 안내한 방번호를 입력하세요.<br><span>같은 방번호를 입력한 참가자끼리 함께 게임합니다.</span></p>
+    <input id="room" maxlength="8" placeholder="예: 2050" value="2050" inputmode="numeric">
+  </div>
+
+  <button id="joinBtn" class="primary join-main-btn">▶ 참가하기</button>
+  <button class="join-back-btn" data-go="home">← 뒤로가기</button>
+  <div id="joinMsg" class="small join-msg"></div>
 </section>
 
 <section id="waiting" class="card center hidden">
@@ -308,7 +454,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V19 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V20 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
   <h3>📡 실시간 진행현황</h3>
   <div id="liveSummary" class="admin-metrics"></div>
   <div id="people" class="list"></div>
@@ -418,7 +564,7 @@ $("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onc
 
 async function joinGame(){
  name=$("name").value.trim();roomId=$("room").value.trim().toUpperCase();
- if(!name||!roomId){$("joinMsg").textContent="이름과 ROOM CODE를 입력하세요.";return}
+ if(!name||!roomId){$("joinMsg").textContent="참가자 이름(아이디)과 방번호를 모두 입력하세요.";return}
  try{localStorage.he2_name=name;localStorage.he2_room=roomId;await set(rr(`participants/${pid}`),{name,joinedAt:Date.now(),phase:"waiting",currentStage:0,score:0,correct:0,wrong:0,roundIndex:0,condition:"대기",updatedAt:Date.now()});$("roomLabel").textContent=roomId;listenParticipant();showReady()}
  catch(e){$("joinMsg").textContent="접속 실패: "+e.message}
 }
@@ -429,7 +575,7 @@ function listenParticipant(){
    if(/^stage[123]Ready$/.test(g.status))showStageReady(+g.currentStage);
    else if(/^stage[123]$/.test(g.status))prepareStage(+g.currentStage,+g.startTime,+g.duration||30);
    else if(/^stage[123]Result$/.test(g.status))showResults(+g.currentStage);
-   else if(g.status==="finalMessage")showFinalMessage(false);
+   else if(g.status==="finalMessage")showFinalMessage();
    else if(g.status==="final")showFinal();
    else if(g.status==="waiting")showReady();
    else if(g.status==="kicked")show("home");
@@ -518,12 +664,12 @@ function showStageReady(s){
     },
     2:{
       title:"이제 NEXT 안내가 제공되지 않습니다",
-      body:'화면 상단의 <b>작업방법을 확인하고 기억</b>하여 수행하세요.<br><b>작업 중 나타나는 외부 요청은 확인 후 원래 작업으로 복귀하세요.</b><br>',
+      body:'화면 상단의 <b>작업방법을 확인하고 기억</b>하여 수행하세요.<br><b>작업방법은 작업 중 변경될 수 있습니다.</b><br>작업 중 나타나는 외부 요청은 확인 후 원래 작업으로 복귀하세요.<br><b>연속 정답은 콤보 점수 적용 · 오답 시 콤보 초기화 및 -20점</b>',
       img:"./cat-stage2.png"
     },
     3:{
       title:"작업 중 다른 요청이 들어옵니다",
-      body:'현재 <b>작업조건과 작업위치</b>를 기억하세요.<br>작업 중 <b>긴급작업 요청</b>이 들어오면 처리한 뒤 원래 작업으로 복귀하세요.',
+      body:'현재 <b>작업조건과 작업위치</b>를 기억하세요.<br>작업 중 <b>긴급작업 요청</b>이 들어오면 처리한 뒤 원래 작업으로 복귀하세요.<br><b>연속 정답은 콤보 점수 적용 · 작업 오답 및 긴급작업 처리 오류 시 콤보 초기화 및 -50점</b>',
       img:"./cat-stage3.png"
     }
   };
@@ -666,41 +812,27 @@ function showConfirmPopup(title,text,onClose){
  board.appendChild(ov);
 }
 function makeMathQuiz(){
-  const type=Math.floor(Math.random()*3);
-  let a,b,answer,q;
-
-  // 긴급작업 요청은 계산 난이도보다 "작업중단 후 복귀" 체험이 핵심이므로
-  // 빠르게 풀 수 있는 수준으로 제한한다.
-  if(type===0){
-    // 두 자리 수 + 한 자리 수
-    a=10+Math.floor(Math.random()*80);   // 10~89
-    b=2+Math.floor(Math.random()*8);     // 2~9
-    answer=a+b;
-    q=`${a} + ${b} = ?`;
-  }else if(type===1){
-    // 두 자리 수 - 한 자리 수 (항상 양수)
-    a=20+Math.floor(Math.random()*70);   // 20~89
-    b=2+Math.floor(Math.random()*8);     // 2~9
-    answer=a-b;
-    q=`${a} − ${b} = ?`;
-  }else{
-    // 한 자리 수 × 한 자리 수
-    a=2+Math.floor(Math.random()*8);     // 2~9
-    b=2+Math.floor(Math.random()*8);     // 2~9
-    answer=a*b;
-    q=`${a} × ${b} = ?`;
-  }
-
-  // 정답 주변의 그럴듯한 오답 3개 생성
-  const candidates=[-3,-2,-1,1,2,3,4,-4];
-  const opts=new Set([answer]);
-  while(opts.size<4){
-    const d=candidates[Math.floor(Math.random()*candidates.length)];
-    const v=answer+d;
-    if(v>=0)opts.add(v);
-  }
-
-  return {q,answer,options:[...opts].sort(()=>Math.random()-.5)};
+ const type=Math.floor(Math.random()*3);let a,b,answer,q;
+ if(type===0){
+   a=10+Math.floor(Math.random()*80);
+   b=2+Math.floor(Math.random()*8);
+   answer=a+b;q=`${a} + ${b} = ?`;
+ }else if(type===1){
+   a=20+Math.floor(Math.random()*70);
+   b=2+Math.floor(Math.random()*8);
+   answer=a-b;q=`${a} − ${b} = ?`;
+ }else{
+   a=2+Math.floor(Math.random()*8);
+   b=2+Math.floor(Math.random()*8);
+   answer=a*b;q=`${a} × ${b} = ?`;
+ }
+ const opts=new Set([answer]);
+ const deltas=[-3,-2,-1,1,2,3,4,-4];
+ while(opts.size<4){
+   const d=deltas[Math.floor(Math.random()*deltas.length)];
+   if(answer+d>=0)opts.add(answer+d);
+ }
+ return {q,answer,options:[...opts].sort(()=>Math.random()-.5)};
 }
 function showMathQuiz(){
  if(ended||stage!==3||quizOpen)return;
