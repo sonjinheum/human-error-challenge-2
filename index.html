@@ -378,7 +378,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
   <div class="join-field">
     <label for="name"><span class="field-icon">👤</span><b>참가자 이름(아이디)</b></label>
     <p>게임 결과표에 표시될 이름을 입력하세요.<br><span>예: 홍길동, 1조-김철수</span></p>
-    <input id="name" maxlength="16" placeholder="예: 홍길동 또는 1조-김철수" autocomplete="off" inputmode="text" lang="ko" autocapitalize="none" spellcheck="false">
+    <input id="name" type="text" maxlength="16" placeholder="예: 홍길동 또는 1조-김철수" autocomplete="off" inputmode="text" lang="ko-KR" autocapitalize="none" spellcheck="false" enterkeyhint="next">
   </div>
 
   <div class="join-field">
@@ -454,7 +454,7 @@ input,select{width:100%;min-height:50px;border:3px solid var(--ink);border-radiu
     <button id="kickBtn" class="danger">전체 KICK</button>
     <button id="resetBtn" class="danger">게임 초기화</button>
   </div>
-  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V21 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
+  <div id="adminStatus" class="msg">대기 중</div><div class="small">TEST BUILD V22 · 실시간 진행현황 + 전체 오답률 + 교수자 최종멘트</div>
   <h3>📡 실시간 진행현황</h3>
   <div id="liveSummary" class="admin-metrics"></div>
   <div id="people" class="list"></div>
@@ -551,7 +551,7 @@ const CONDITIONS=[
  {label:"3의 배수만 3 → 9 순서로 클릭",seq:[3,6,9]}
 ];
 let pid=localStorage.he2_pid||(crypto.randomUUID?.()||("p-"+Date.now()+"-"+Math.random().toString(36).slice(2)));localStorage.he2_pid=pid;
-let unsubParticipants=null,unsubGame=null;
+let unsubParticipants=null,unsubGame=null,participantJoinAt=0;
 const rr=(p="")=>ref(db,`rooms/${roomId}${p?"/"+p:""}`);
 const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));$(id)?.classList.remove("hidden")};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -560,22 +560,43 @@ async function updateMyProgress(patch={}){
  try{await update(rr(`participants/${pid}`),{name,updatedAt:Date.now(),...patch})}catch(e){}
 }
 const phaseLabel=p=>({waiting:"대기",ready:"준비",countdown:"카운트",playing:"진행 중",finished:"완료",result:"결과 확인",finalMessage:"최종멘트",final:"최종결과"}[p]||p||"대기");
+
+function activateNameInput(){
+ const n=$("name");if(!n)return;
+ // 모바일에서 화면 전환 직후 한글 IME가 첫 포커스에 붙지 않는 현상 보정
+ n.readOnly=false;n.disabled=false;
+ try{n.blur()}catch(e){}
+ setTimeout(()=>{
+   try{
+     n.focus({preventScroll:true});
+     const len=n.value.length;
+     n.setSelectionRange(len,len);
+   }catch(e){}
+ },80);
+}
+
 document.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.go){
    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
    show(b.dataset.go);
    if(b.dataset.go==="join"){
-     setTimeout(()=>{
-       const n=$("name");
-       if(n){n.readOnly=false;n.disabled=false}
-     },200);
+     activateNameInput();
    }
  }
  if(b.dataset.readyStage)readyAdminStage(+b.dataset.readyStage);
  if(b.dataset.stage)startAdminStage(+b.dataset.stage);
  if(b.dataset.result)setStatus(`stage${b.dataset.result}Result`);
 });
+const nameInput=$("name");
+if(nameInput){
+ nameInput.addEventListener("pointerup",()=>{
+   if(document.activeElement!==nameInput){
+     try{nameInput.focus({preventScroll:true})}catch(e){}
+   }
+ });
+}
+
 $("joinBtn").onclick=joinGame;$("adminBtn").onclick=adminLogin;$("finalBtn").onclick=releaseFinalResults;$("previewFinalBtn").onclick=previewAdminFinal;$("sendFinalMessageBtn").onclick=sendFinalMessage;$("resetBtn").onclick=resetGame;$("kickBtn").onclick=kickAll;
 
 async function joinGame(){
@@ -583,7 +604,9 @@ async function joinGame(){
  if(!name||!roomId){$("joinMsg").textContent="참가자 이름(아이디)과 방번호를 모두 입력하세요.";return}
  try{
   localStorage.he2_name=name;localStorage.he2_room=roomId;
-  await set(rr(`participants/${pid}`),{name,joinedAt:Date.now(),phase:"waiting",currentStage:0,score:0,correct:0,wrong:0,roundIndex:0,condition:"대기",updatedAt:Date.now()});
+  const joinedAt=Date.now();
+  participantJoinAt=joinedAt;
+  await set(rr(`participants/${pid}`),{name,joinedAt,phase:"waiting",currentStage:0,score:0,correct:0,wrong:0,roundIndex:0,condition:"대기",updatedAt:joinedAt});
   $("roomLabel").textContent=roomId;
   showReady();
   listenParticipant();
@@ -610,8 +633,12 @@ function listenParticipant(){
    else if(g.status==="final")showFinal();
    else if(g.status==="waiting")showReady();
    else if(g.status==="kicked"){
-     localStorage.removeItem("he2_room");
-     show("home");
+     const kickedAt=+g.kickedAt||0;
+     if(kickedAt && participantJoinAt && kickedAt>=participantJoinAt){
+       localStorage.removeItem("he2_room");
+       show("home");
+     }
+     // kickedAt이 없거나 접속 이전의 오래된 KICK 상태면 무시하고 READY 유지
    }
  });
 }
@@ -681,7 +708,12 @@ async function setStatus(status){
   await update(rr("game"),{status,currentStage:status==="final"?3:s,commandId:Date.now()});
 }
 async function resetGame(){if(!confirm("참가자와 모든 결과를 삭제하고 초기화할까요?"))return;await remove(rr());await set(rr("game"),{status:"waiting",currentStage:0,startTime:0});}
-async function kickAll(){if(!confirm("모든 참가자를 퇴장시킬까요?"))return;await remove(rr("participants"));await update(rr("game"),{status:"kicked"});}
+async function kickAll(){
+ if(!confirm("모든 참가자를 퇴장시킬까요?"))return;
+ const now=Date.now();
+ await remove(rr("participants"));
+ await update(rr("game"),{status:"kicked",kickedAt:now,commandId:now});
+}
 
 let briefingTimer=null,overloadTimer=null;
 function showStageReady(s){
